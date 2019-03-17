@@ -61,3 +61,6 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+# neo4j data volume mapped by compose file
+data/**/*
+
