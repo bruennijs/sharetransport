@@ -2,7 +2,7 @@ version: "3"
 
 services:
 
-  sharetransport-db:
+  sharetransport-neo4j:
     image: bruenni/sharetransport-neo4j
     build: ./docker
     container_name: sharetransport-neo4j
