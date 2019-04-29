@@ -12,7 +12,9 @@ MERGE (b)-[:ROUTE {weight:20}]->(d)
 MERGE (a)-[:ROUTE {weight:10}]->(c)
 MERGE (c)-[:ROUTE {weight:5}]->(d)
 
-MERGE (a)-[:ROUTE {weight:40}]->(d)
+MERGE (a)-[:ROUTE {weight:10}]->(d)
 
 // e - via -> d
 MERGE (e)-[:ROUTE {weight:1}]->(b);
+
+//
