@@ -12,7 +12,7 @@ import org.neo4j.ogm.session.SessionFactory;
 public class Neo4jSessionFactory {
 
   private final static Configuration configuration = null; // provide configuration as seen before
-  private final static SessionFactory sessionFactory = new SessionFactory(configuration, "school.domain");
+  private final static SessionFactory sessionFactory = new SessionFactory(configuration, "de.bruenni.sharetransport.domain");
   private static Neo4jSessionFactory factory = new Neo4jSessionFactory();
 
   public static Neo4jSessionFactory getInstance() {

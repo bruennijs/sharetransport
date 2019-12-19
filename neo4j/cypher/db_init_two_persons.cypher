@@ -1,9 +1,9 @@
 MERGE (cur:Place {name:'Current location', type: 'current'})
 
-MERGE (a:Orig {name:'Olli'})
-MERGE (b:Dest {name:'OlliZiel'})
-MERGE (c:Orig {name:'Thomas'})
-MERGE (d:Dest {name:'ThomasZiel'})
+MERGE (a:Orig {name:'Olli', tripId: 1})
+MERGE (b:Dest {name:'Olli Ziel', tripId: 1})
+MERGE (c:Orig {name:'Thomas', tripId: 2})
+MERGE (d:Dest {name:'Thomas Ziel', tripId: 2})
 
 MERGE (cur)-[:ROUTE {weight: 10}]->(a)
 MERGE (cur)-[:ROUTE {weight: 15}]->(c)
