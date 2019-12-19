@@ -8,9 +8,28 @@
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <version.neo4j>3.5.9</version.neo4j>
+        <version.neo4j-java-driver>1.7.5</version.neo4j-java-driver>
+    </properties>
+
     <modules>
         <module>routing</module>
     </modules>
 
-
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.neo4j</groupId>
+                <artifactId>neo4j</artifactId>
+                <version>${version.neo4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.neo4j.driver</groupId>
+                <artifactId>neo4j-java-driver</artifactId>
+                <version>${version.neo4j-java-driver}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
