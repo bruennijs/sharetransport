@@ -1,9 +1,11 @@
-package sharetransport.domain;
+package sharetransport.domain.route;
 
 import java.util.HashMap;
 
+import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
 
+import sharetransport.domain.Person;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jAbstractRepository;
 
 /**
@@ -21,7 +23,7 @@ public class RouteRepository extends Neo4jAbstractRepository<Person> {
   }
 
   public void findRouteForPersons(Long personId) {
-    //this.getSession().query("", new HashMap<>()).queryResults().
+    //final Result result = this.getSession().query("", new HashMap<>());
   }
 
   public Class<Person> getEntityType() {
