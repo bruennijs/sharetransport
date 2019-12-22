@@ -1,26 +1,34 @@
-MERGE (cur:Place {name:'Current location', type: 'current'})
+// CREATE (p1:Place {name: 'Current location', type: 'current'})
+CREATE (t1:Tour {stared: false})
 
-MERGE (a:Orig {name:'Olli', tripId: 1})
-MERGE (b:Dest {name:'Olli Ziel', tripId: 1})
-MERGE (c:Orig {name:'Thomas', tripId: 2})
-MERGE (d:Dest {name:'Thomas Ziel', tripId: 2})
+CREATE (v1:Vehicle {name:'vehicle 1'})
 
-MERGE (cur)-[:ROUTE {weight: 10}]->(a)
-MERGE (cur)-[:ROUTE {weight: 15}]->(c)
+CREATE (p1:Passenger {name:'Olli'})
+CREATE (o1:Hop {origin: true, name:'o1'})
+CREATE (d1:Hop {destination: true, name:'d1'})
+CREATE (p1)-[:HOPS_ON]->(o1)
+CREATE (p1)-[:HOPS_OFF]->(d1)
+CREATE (o1)-[:DISTANCE {weight: 5}]->(d1)
+CREATE (o1)-[:BOOKED_TO]->(d1)
 
-MERGE (a)-[:ROUTE {weight:5, type: 'direct'}]->(b)
-MERGE (c)-[:ROUTE {weight:15, type: 'direct'}]->(d)
+CREATE (p2:Passenger {name:'Tom'})
+CREATE (o2:Hop {origin: true, name:'o2'})
+CREATE (d2:Hop {destination: true, name:'d2'})
+CREATE (p2)-[:HOPS_ON]->(o2)
+CREATE (p2)-[:HOPS_OFF]->(d2)
+CREATE (o2)-[:DISTANCE {weight: 15}]->(d2)
+CREATE (o2)-[:BOOKED_TO]->(d2)
 
-MERGE (a)-[:ROUTE {weight:20}]->(c)
-MERGE (c)-[:ROUTE {weight:15}]->(a)
+CREATE (v1)-[:DISTANCE {weight: 10}]->(o1)
+CREATE (v1)-[:DISTANCE {weight: 15}]->(o2)
 
-MERGE (a)-[:ROUTE {weight:5}]->(d)
-MERGE (d)-[:ROUTE {weight:10}]->(a)
-MERGE (c)-[:ROUTE {weight:5}]->(b)
-MERGE (b)-[:ROUTE {weight:10}]->(c)
+CREATE (o1)-[:DISTANCE {weight: 20}]->(o2)
+CREATE (o2)-[:DISTANCE {weight: 15}]->(o1)
 
-MERGE (d)-[:ROUTE {weight:10}]->(b)
-MERGE (b)-[:ROUTE {weight:20}]->(d);
+CREATE (o1)-[:DISTANCE {weight: 5}]->(d2)
+CREATE (d2)-[:DISTANCE {weight: 10}]->(o1)
+CREATE (o2)-[:DISTANCE {weight: 5}]->(d1)
+CREATE (d1)-[:DISTANCE {weight: 10}]->(o2)
 
-
-//
+CREATE (d2)-[:DISTANCE {weight: 10}]->(d1)
+CREATE (d1)-[:DISTANCE {weight: 20}]->(d2);

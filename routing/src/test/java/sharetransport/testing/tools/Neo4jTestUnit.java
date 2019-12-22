@@ -19,29 +19,29 @@ import org.neo4j.driver.v1.Session;
  */
 public class Neo4jTestUnit implements AutoCloseable {
 
-  private Driver driver;
+  private Session session;
 
-  public Neo4jTestUnit(Driver driver, String filePath) throws IOException {
+  private Neo4jTestUnit(Session session, String filePath) throws IOException {
 
-    this.driver = notNull(driver, "driver cannot be null");
+    this.session = notNull(session, "session cannot be null");
     initDb(filePath);
   }
 
-  public Neo4jTestUnit(Driver driver, InputStream stream) throws IOException {
+  private Neo4jTestUnit(Session session, InputStream stream) throws IOException {
 
-    this.driver = notNull(driver, "driver cannot be null");
+    this.session = notNull(session, "session cannot be null");
     initDb(stream);
   }
 
   /**
    * Creates test unit instance loading statements from file into db using driver object.
-   * @param driver driver to use.
-   * @param filePath filepath to read from
+   * @param session Session to use.
+   * @param stream stream to read statements from.
    * @return Autoclosable instance.
    * @throws IOException
    */
-  public static Neo4jTestUnit create(Driver driver, String filePath) throws IOException {
-    return new Neo4jTestUnit(driver, filePath);
+  public static Neo4jTestUnit create(Session session, InputStream stream) throws IOException {
+    return new Neo4jTestUnit(session, stream);
   }
 
   @Override public void close() {
@@ -50,9 +50,7 @@ public class Neo4jTestUnit implements AutoCloseable {
   }
 
   private void runStatement(String statement) {
-    try (Session session = driver.session(AccessMode.WRITE)) {
-      session.run(statement);
-    }
+    session.run(statement);
   }
 
   private void initDb(InputStream stream) throws IOException {

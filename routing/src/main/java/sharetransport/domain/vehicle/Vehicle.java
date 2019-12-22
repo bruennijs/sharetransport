@@ -1,4 +1,4 @@
-package sharetransport.domain;
+package sharetransport.domain.vehicle;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -12,7 +12,7 @@ import sharetransport.infrastructure.persistence.Identifiable;
  * @author Oliver Brüntje
  */
 @NodeEntity
-public class Person implements Identifiable<Long> {
+public class Vehicle implements Identifiable<Long> {
 
   @Id
   @GeneratedValue
@@ -20,5 +20,15 @@ public class Person implements Identifiable<Long> {
 
   public Long getId() {
     return this.id;
+  }
+
+  public Vehicle(Long id) {
+    this.id = id;
+  }
+
+  @Override public String toString() {
+    return "Vehicle{" +
+        "id=" + id +
+        '}';
   }
 }

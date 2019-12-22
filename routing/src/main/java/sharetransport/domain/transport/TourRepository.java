@@ -1,11 +1,8 @@
-package sharetransport.domain.route;
+package sharetransport.domain.transport;
 
-import java.util.HashMap;
-
-import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
 
-import sharetransport.domain.Person;
+import sharetransport.domain.hop.Person;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jAbstractRepository;
 
 /**
@@ -13,12 +10,12 @@ import sharetransport.infrastructure.persistence.neo4j.Neo4jAbstractRepository;
  *
  * @author Oliver Brüntje
  */
-public class RouteRepository extends Neo4jAbstractRepository<Person> {
+public class TourRepository extends Neo4jAbstractRepository<Person> {
   /**
    * Ctor
    * @param session
    */
-  public RouteRepository(Session session) {
+  public TourRepository(Session session) {
     super(session);
   }
 
