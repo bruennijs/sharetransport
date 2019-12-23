@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Equator;
-import org.apache.commons.collections4.ListUtils;
-import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -18,18 +16,22 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.neo4j.driver.internal.logging.ConsoleLogging;
 import org.neo4j.driver.internal.logging.Slf4jLogging;
 import org.neo4j.driver.v1.Config;
+import org.neo4j.driver.v1.Logging;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.harness.junit.Neo4jRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import sharetransport.domain.hop.Hop;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
-import sharetransport.testing.IdentifiableEquator;
 import sharetransport.testing.tools.Neo4jTestUnit;
 
 @RunWith(JUnit4.class)
 public class RoutingIT {
+
+  private static Logger LOG = LoggerFactory.getLogger(RoutingIT.class);
 
   // This rule starts a Neo4j instance
   @ClassRule
@@ -47,7 +49,8 @@ public class RoutingIT {
   @BeforeClass
   public static void beforeClass() {
     final Config config = Config.build()
-        .withLogging(new Slf4jLogging())
+        .withLogging(Logging.console(Level.FINE))
+        //.withLogging(Logging.slf4j())
         .withoutEncryption()
         .toConfig();
 
@@ -80,18 +83,18 @@ public class RoutingIT {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
         RoutingIT.class.getResourceAsStream("/cypher/two_persons.cypher"))) {
 
-      final List<Hop> allHops = session.run("MATCH (h:Hop) RETURN h as hop")
+      final Map<Long, Hop> allHops = session.run("MATCH (h:Hop) RETURN h as hop")
           .stream()
           .map(r -> Hop.from(r.get("hop").asNode()))
-          .collect(Collectors.toList());
+          .collect(Collectors.toMap(hop -> hop.getId(), val -> val));
 
-      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(allHops);
+      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(allHops.values().stream().collect(Collectors.toList()));
 
       // THEN
       assertThat(routeSpecifications.get(0).getHops())
           .usingElementComparator(Comparator.comparing(Hop::getId))
-          .containsExactly(allHops.get(0), allHops.get(1));
-      assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(45);
+          .containsExactly(allHops.get(3), allHops.get(4),  allHops.get(6),  allHops.get(7));
+      assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(30);
     }
   }
 }

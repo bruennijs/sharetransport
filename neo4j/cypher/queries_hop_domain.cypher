@@ -9,11 +9,22 @@ RETURN p as route,
 MATCH p=(:Hop)-[d:DISTANCE*3]->(:Hop)
 WHERE ALL (hopId IN [11,12,14,15] WHERE hopId IN [n IN nodes(p) | id(n)])
 RETURN p as route,
-      nodes(p) as hops,
-      reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights;
+      extract (n IN nodes(p) | n.name) as hopNames,
+      reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
+ORDER BY sumWeights ASC;
 
-MATCH p=(h:Hop)
-RETURN collect(id(h)) as ids;
+MATCH p=(h1:Hop)-[d:DISTANCE*3]->(h2:Hop)
+  WHERE ALL (hopId IN [11,12,14,15] WHERE hopId IN [n IN nodes(p) | id(n)])
+RETURN p as route,
+      nodes(p) as nodes,
+       extract (n IN nodes(p) | n.name) as hopNames,
+       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
+ORDER BY sumWeights ASC;
+
+MATCH p=(h:Hop)-[*..1]->(:Hop)
+RETURN h as origin,
+  relationships(p) as relations,
+  collect(id(h)) as ids;
 
 /*MATCH p=shortestPath
 RETURN h as from, h2 as to, p as route, hFrom as hBookedTo*/

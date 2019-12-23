@@ -1,4 +1,4 @@
-package sharetransport.domain.hop;
+package sharetransport.domain.routing;
 
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -15,6 +15,10 @@ import sharetransport.infrastructure.persistence.Identifiable;
  */
 @NodeEntity
 public class Hop implements Identifiable<Long> {
+
+  public static final String PROPERTY_DESTINATION = "destination";
+
+  public static final String PROPERTY_ORIGIN = "origin";
 
   @Id
   @GeneratedValue
@@ -33,8 +37,8 @@ public class Hop implements Identifiable<Long> {
 
   public static Hop from(Node node) {
     return new Hop(node.id(),
-        node.get("origin").asBoolean(false),
-        node.get("destination").asBoolean(false));
+        node.get(PROPERTY_ORIGIN).asBoolean(false),
+        node.get(PROPERTY_DESTINATION).asBoolean(false));
   }
 
   public Long getId() {
@@ -47,5 +51,16 @@ public class Hop implements Identifiable<Long> {
         ", origin=" + origin +
         ", destination=" + destination +
         '}';
+  }
+
+  public enum Relation {
+    BOOKED_TO("BOOKED_TO"),
+    DISTANCE ("DISTANCE");
+
+    private String value;
+
+    Relation(String value) {
+      this.value = value;
+    }
   }
 }

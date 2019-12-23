@@ -1,7 +1,8 @@
-package sharetransport.domain.hop;
+package sharetransport.domain.routing;
 
 import org.neo4j.ogm.session.Session;
 
+import sharetransport.domain.routing.Hop;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jAbstractRepository;
 
 /**

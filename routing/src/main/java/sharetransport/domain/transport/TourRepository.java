@@ -2,7 +2,6 @@ package sharetransport.domain.transport;
 
 import org.neo4j.ogm.session.Session;
 
-import sharetransport.domain.hop.Person;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jAbstractRepository;
 
 /**

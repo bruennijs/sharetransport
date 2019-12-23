@@ -3,21 +3,12 @@ package sharetransport.domain.routing;
 import static org.apache.commons.lang3.Validate.notNull;
 import static org.neo4j.driver.v1.Values.parameters;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.neo4j.driver.v1.AccessMode;
-import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.types.Path;
-
-import sharetransport.domain.hop.Hop;
-import sharetransport.domain.vehicle.Vehicle;
 
 /**
  * Finds optimal routes between hops
@@ -44,10 +35,12 @@ public class RoutingService {
           "distanceRelationCount", hops.size() - 1);
 
       final StatementResult result = session.run("MATCH p=(:Hop)-[d:DISTANCE*3]->(:Hop)\n"
-          + " WHERE ALL (hopId IN {hopIds} WHERE hopId IN [n IN nodes(p) | id(n)])\n"
+          + " WHERE ALL (hopId IN {hopIds} WHERE hopId IN [n IN nodes(p) | id(n)])"
+          + "   AND sharetransport.domain.routing.areHopsInOrder(p)\n"
           + " RETURN p as route,\n"
           + "       nodes(p) as hops,\n"
-          + "       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights", parameters);
+          + "       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights"
+          + " ORDER BY sumWeights ASC", parameters);
 
       return result
           .stream()

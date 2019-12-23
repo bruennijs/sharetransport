@@ -1,4 +1,4 @@
-package sharetransport.domain.hop;
+package sharetransport.domain.transport;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
