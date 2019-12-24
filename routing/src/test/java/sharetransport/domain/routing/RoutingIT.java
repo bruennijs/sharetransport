@@ -2,12 +2,16 @@ package sharetransport.domain.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -21,6 +25,8 @@ import org.neo4j.driver.internal.logging.Slf4jLogging;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Logging;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.types.Node;
 import org.neo4j.harness.junit.Neo4jRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,20 +87,33 @@ public class RoutingIT {
   public void whenRouteAllHopsExpectShortestPathIsCorrect() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/two_persons.cypher"))) {
+        RoutingIT.class.getResourceAsStream("/cypher/4_hops_in_series.cypher"))) {
 
-      final Map<Long, Hop> allHops = session.run("MATCH (h:Hop) RETURN h as hop")
+      final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
+          .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
+              + " RETURN hopOff as off, hopOn as on, p as passenger")
           .stream()
-          .map(r -> Hop.from(r.get("hop").asNode()))
-          .collect(Collectors.toMap(hop -> hop.getId(), val -> val));
+          .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
+              val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
 
-      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(allHops.values().stream().collect(Collectors.toList()));
+      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
 
       // THEN
       assertThat(routeSpecifications.get(0).getHops())
           .usingElementComparator(Comparator.comparing(Hop::getId))
-          .containsExactly(allHops.get(3), allHops.get(4),  allHops.get(6),  allHops.get(7));
+          .containsExactly(passengerHops.get("p1").getLeft(),
+              passengerHops.get("p1").getRight(),
+              passengerHops.get("p2").getLeft(),
+              passengerHops.get("p2").getRight());
       assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(30);
     }
+  }
+
+  private List<Hop> getNodes(Map<String, ImmutablePair<Hop, Hop>> passengerHops) {
+    return passengerHops
+        .values()
+        .stream()
+        .flatMap(p -> Lists.newArrayList(p.getLeft(), p.getRight()).stream())
+        .collect(Collectors.toList());
   }
 }

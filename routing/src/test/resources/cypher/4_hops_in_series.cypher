@@ -3,7 +3,7 @@ CREATE (t1:Tour {stared: false})
 
 CREATE (v1:Vehicle {name:'vehicle 1'})
 
-CREATE (p1:Passenger {name:'Olli'})
+CREATE (p1:Passenger {name:'Olli', uid: 'p1'})
 CREATE (o1:Hop {origin: true, name:'o1'})
 CREATE (d1:Hop {destination: true, name:'d1'})
 CREATE (p1)-[:HOPS_ON]->(o1)
@@ -11,7 +11,7 @@ CREATE (p1)-[:HOPS_OFF]->(d1)
 CREATE (o1)-[:DISTANCE {weight: 5}]->(d1)
 CREATE (o1)-[:BOOKED_TO]->(d1)
 
-CREATE (p2:Passenger {name:'Tom'})
+CREATE (p2:Passenger {name:'Tom', uid: 'p2'})
 CREATE (o2:Hop {origin: true, name:'o2'})
 CREATE (d2:Hop {destination: true, name:'d2'})
 CREATE (p2)-[:HOPS_ON]->(o2)

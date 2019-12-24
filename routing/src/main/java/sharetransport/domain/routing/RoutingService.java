@@ -44,7 +44,9 @@ public class RoutingService {
 
       return result
           .stream()
-          .map(r -> RouteSpecification.from(r.get("hops").asList(v -> Hop.from(v.asNode()))))
+          .map(record -> RouteSpecification.from(
+              record.get("hops").asList(v -> Hop.from(v.asNode())),
+              record.get("sumWeights").asInt()))
           .collect(Collectors.toList());
   }
 }

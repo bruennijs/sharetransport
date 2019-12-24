@@ -26,6 +26,9 @@ RETURN h as origin,
   relationships(p) as relations,
   collect(id(h)) as ids;
 
+MATCH (hopOn:Hop)<-[HOPS_ON]-(p:Passenger)-[HOPS_OFF]->(hopOff:Hop)
+RETURN hopOff as off, hopOn as on, p as passenger
+
 /*MATCH p=shortestPath
 RETURN h as from, h2 as to, p as route, hFrom as hBookedTo*/
 

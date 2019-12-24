@@ -12,18 +12,21 @@ import java.util.List;
  */
 public class RouteSpecification {
 
+  private final Integer sumWeights;
+
   private List<Hop> hops;
 
-  public RouteSpecification(List<Hop> hops) {
+  public RouteSpecification(List<Hop> hops, Integer sumWeights) {
     this.hops = notNull(hops, "hops cannot be null");
+    this.sumWeights = notNull(sumWeights, " cannot be null");
   }
 
   public List<Hop> getHops() {
     return hops;
   }
 
-  public static RouteSpecification from(List<Hop> hops) {
-    return new RouteSpecification(hops);
+  public static RouteSpecification from(List<Hop> hops, Integer sumWeights) {
+    return new RouteSpecification(hops, sumWeights);
   }
 
   /**
@@ -31,6 +34,6 @@ public class RouteSpecification {
    * @return
    */
   public Integer getWeight() {
-    return 0;
+    return sumWeights;
   }
 }
