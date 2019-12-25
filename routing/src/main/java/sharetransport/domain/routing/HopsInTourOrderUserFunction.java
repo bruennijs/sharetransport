@@ -1,6 +1,5 @@
 package sharetransport.domain.routing;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,14 +33,11 @@ public class HopsInTourOrderUserFunction {
   @UserFunction
   @Description("sharetransport.domain.routing.areHopsInOrder(Path path) - checks wheter path has Orig node before destination of same trip")
   public Boolean areHopsInOrder(@Name(value = "path") Path path) {
-    //path.nodes().forEach(n -> n.getProperty());
-    log.info("HELLO WORLD");
     final List<Boolean> collect = nodeStream(path)
         .filter(n -> isHopADestination(n))
         .map(n -> isOriginHopBeforeDestinationHopInPath(n, path))
         .collect(Collectors.toList());
 
-    //collect.stream().forEach(n -> log.info("n.relation degree=" + n.getDegree()));
     return collect.stream().allMatch(b -> b);
   }
 
@@ -54,29 +50,26 @@ public class HopsInTourOrderUserFunction {
   }
 
   private Boolean isOriginHopBeforeDestinationHopInPath(Node hopDestination, Path path) {
-    final Optional<Node> hopOrigin = findOriginHop(hopDestination);
+    final List<Node> originHops = findOriginHops(hopDestination);
 
-    if (hopOrigin.isPresent()) {
-      return isOriginBeforeDestination(hopOrigin.get(), hopDestination, path);
-    }
-
-    return false;
+    return originHops.stream().allMatch(origin -> {
+      final List<Node> hopsOfPath = nodeStream(path).collect(Collectors.toList());
+      return isOriginBeforeDestination(origin, hopDestination, hopsOfPath);
+    });
   }
 
-  private Boolean isOriginBeforeDestination(Node hopOrigin, Node hopDestination, Path path) {
-    final List<Node> nodelist = nodeStream(path).collect(Collectors.toList());
-    return nodelist.indexOf(hopOrigin) < nodelist.indexOf(hopDestination);
+  private Boolean isOriginBeforeDestination(Node hopOrigin, Node hopDestination, List<Node> nodesOfPath) {
+    return nodesOfPath.indexOf(hopOrigin) < nodesOfPath.indexOf(hopDestination);
   }
 
   private Stream<Node> nodeStream(Path path) {
     return StreamSupport.stream(path.nodes().spliterator(), false);
   }
 
-  private Optional<Node> findOriginHop(Node n) {
-    final Relationship bookedTo = n.getSingleRelationship(() -> Hop.Relation.BOOKED_TO.name(), Direction.INCOMING);
-    if (bookedTo != null) {
-      return Optional.of(bookedTo.getStartNode());
-    }
-    return Optional.empty();
+  private List<Node> findOriginHops(Node destination) {
+    final Iterable<Relationship> originHops = destination.getRelationships(() -> Hop.Relation.BOOKED_TO.name(), Direction.INCOMING);
+    return StreamSupport.stream(originHops.spliterator(), false)
+        .map(relationship -> relationship.getStartNode())
+        .collect(Collectors.toList());
   }
 }

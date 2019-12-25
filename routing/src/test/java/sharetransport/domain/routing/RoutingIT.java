@@ -109,6 +109,31 @@ public class RoutingIT {
     }
   }
 
+  @Test
+  public void whenTwoOriginClusterAndOneDestinationExpectShortestPAthViaAllOrigins() throws Throwable
+  {
+    try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
+        RoutingIT.class.getResourceAsStream("/cypher/3_hops_by_two_origins_and_one_destination.cypher"))) {
+
+      final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
+          .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
+              + " RETURN hopOff as off, hopOn as on, p as passenger")
+          .stream()
+          .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
+              val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
+
+      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
+
+      // THEN
+      assertThat(routeSpecifications.get(0).getHops())
+          .usingElementComparator(Comparator.comparing(Hop::getId))
+          .containsExactly(passengerHops.get("p2").getLeft(),
+              passengerHops.get("p1").getLeft(),
+              passengerHops.get("p1").getRight());
+      assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(20);
+    }
+  }
+
   private List<Hop> getNodes(Map<String, ImmutablePair<Hop, Hop>> passengerHops) {
     return passengerHops
         .values()

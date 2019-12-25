@@ -1,10 +1,13 @@
 package sharetransport.domain.routing;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+import sharetransport.infrastructure.persistence.AbstractIdentifiable;
 import sharetransport.infrastructure.persistence.Identifiable;
 
 /**
@@ -14,23 +17,19 @@ import sharetransport.infrastructure.persistence.Identifiable;
  * @author Oliver Brüntje
  */
 @NodeEntity
-public class Hop implements Identifiable<Long> {
+public class Hop extends AbstractIdentifiable<Long> {
 
   public static final String PROPERTY_DESTINATION = "destination";
 
   public static final String PROPERTY_ORIGIN = "origin";
 
-  @Id
-  @GeneratedValue
-  private Long id;
-
   private Boolean origin;
 
   private Boolean destination;
 
-  public Hop(long id, Boolean origin, Boolean destination) {
+  public Hop(Long id, Boolean origin, Boolean destination) {
 
-    this.id = id;
+    super(id);
     this.origin = origin;
     this.destination = destination;
   }
@@ -39,18 +38,6 @@ public class Hop implements Identifiable<Long> {
     return new Hop(node.id(),
         node.get(PROPERTY_ORIGIN).asBoolean(false),
         node.get(PROPERTY_DESTINATION).asBoolean(false));
-  }
-
-  public Long getId() {
-    return this.id;
-  }
-
-  @Override public String toString() {
-    return "Hop{" +
-        "id=" + id +
-        ", origin=" + origin +
-        ", destination=" + destination +
-        '}';
   }
 
   public enum Relation {
