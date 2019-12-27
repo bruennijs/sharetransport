@@ -30,6 +30,7 @@ public class Neo4jTestUnit implements AutoCloseable {
   private Neo4jTestUnit(Session session, InputStream stream) throws IOException {
 
     this.session = notNull(session, "session cannot be null");
+    deleteAllNodes();
     initDb(stream);
   }
 
@@ -45,8 +46,6 @@ public class Neo4jTestUnit implements AutoCloseable {
   }
 
   @Override public void close() {
-    runStatement("MATCH (n)"
-        + "DETACH DELETE n");
   }
 
   private void runStatement(String statement) {
@@ -67,5 +66,10 @@ public class Neo4jTestUnit implements AutoCloseable {
     try (final FileInputStream is = new FileInputStream(filePath)) {
       return IOUtils.toString(is);
     }
+  }
+
+  private void deleteAllNodes() {
+    runStatement("MATCH (n)"
+        + "DETACH DELETE n");
   }
 }

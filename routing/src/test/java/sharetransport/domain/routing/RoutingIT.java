@@ -2,14 +2,13 @@ package sharetransport.domain.routing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.assertj.core.util.Lists;
 import org.junit.After;
@@ -20,17 +19,14 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.neo4j.driver.internal.logging.ConsoleLogging;
-import org.neo4j.driver.internal.logging.Slf4jLogging;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Logging;
 import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.types.Node;
 import org.neo4j.harness.junit.Neo4jRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.bruenni.sharetransport.neo4j.routing.HopsInTourOrderUserFunction;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
 import sharetransport.testing.tools.Neo4jTestUnit;
 

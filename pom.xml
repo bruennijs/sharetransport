@@ -11,6 +11,7 @@
 
     <modules>
         <module>routing</module>
+        <module>neo4j</module>
     </modules>
 
     <dependencyManagement>
@@ -24,6 +25,18 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>4.4</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.neo4j</groupId>
+                <artifactId>neo4j</artifactId>
+                <version>${version.neo4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.neo4j.test</groupId>
+                <artifactId>neo4j-harness</artifactId>
+                <version>${version.neo4j}</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
@@ -44,4 +57,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <properties>
+        <version.neo4j>3.5.9</version.neo4j>
+    </properties>
 </project>

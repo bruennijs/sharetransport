@@ -6,19 +6,22 @@ RETURN p as route,
        reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
   ORDER BY sumWeights ASC;
 
-MATCH p=(:Hop)-[d:DISTANCE*3]->(:Hop)
-WHERE ALL (hopId IN [11,12,14,15] WHERE hopId IN [n IN nodes(p) | id(n)])
+MATCH p=(h1:Hop)-[d:DISTANCE*3]->(h2:Hop)
+  WHERE ALL (uid IN ['o1', 'o2', 'd1', 'd2'] WHERE uid IN [n IN nodes(p) | n.uid])
 RETURN p as route,
-      extract (n IN nodes(p) | n.name) as hopNames,
-      reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
-ORDER BY sumWeights ASC;
+       nodes(p) as nodes,
+       extract (n IN nodes(p) | n.uid) as uids,
+       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
+  ORDER BY sumWeights ASC;
 
 MATCH p=(h1:Hop)-[d:DISTANCE*3]->(h2:Hop)
-  WHERE ALL (hopId IN [11,12,14,15] WHERE hopId IN [n IN nodes(p) | id(n)])
-RETURN p as route,
+  WHERE ALL (uid IN ['o1', 'o2', 'd1', 'd2'] WHERE uid IN [n IN nodes(p) | n.uid])
+WITH p as route,
       nodes(p) as nodes,
-       extract (n IN nodes(p) | n.name) as hopNames,
+       extract (n IN nodes(p) | n.uid) as uids,
        reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
+UNWIND nodes
+
 ORDER BY sumWeights ASC;
 
 MATCH p=(h:Hop)-[*..1]->(:Hop)
@@ -36,3 +39,4 @@ MATCH p=(h)
 DETACH DELETE h;
 
 MATCH (h:Hop {name: 'o1'}) RETURN h as hop;
+

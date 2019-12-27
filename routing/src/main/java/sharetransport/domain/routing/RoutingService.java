@@ -38,7 +38,7 @@ public class RoutingService {
 
       final StatementResult result = session.run(String.format("MATCH p=(:Hop)-[d:DISTANCE*%d]->(:Hop)\n"
           + " WHERE ALL (hopId IN {hopIds} WHERE hopId IN [n IN nodes(p) | id(n)])"
-          + "   AND sharetransport.domain.routing.areHopsInOrder(p)\n"
+          + "   AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)\n"
           + " RETURN p as route,\n"
           + "       nodes(p) as hops,\n"
           + "       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights"
@@ -47,8 +47,9 @@ public class RoutingService {
       return result
           .stream()
           .map(record -> RouteSpecification.from(
-              record.get("hops").asList(v -> Hop.from(v.asNode())),
-              record.get("sumWeights").asInt()))
+              record.get("hops").asList(hop -> Hop.from(hop.asNode())),
+              record.get("sumWeights").asInt(),
+              record.get("route").asPath()))
           .collect(Collectors.toList());
   }
 

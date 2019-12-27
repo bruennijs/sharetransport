@@ -4,6 +4,8 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.List;
 
+import org.neo4j.driver.v1.types.Path;
+
 /**
  * Contains a list of hops in an ordered list which is the order of an valid route
  * do a transport between them. the sum of weights is the overall weight if doing a transport
@@ -25,7 +27,7 @@ public class RouteSpecification {
     return hops;
   }
 
-  public static RouteSpecification from(List<Hop> hops, Integer sumWeights) {
+  public static RouteSpecification from(List<Hop> hops, Integer sumWeights, Path path) {
     return new RouteSpecification(hops, sumWeights);
   }
 

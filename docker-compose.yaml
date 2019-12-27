@@ -4,7 +4,7 @@ services:
 
   neo4j:
     image: bruenni/sharetransport-neo4j:3.5.14
-    build: ./neo4j
+    build: ./
     container_name: sharetransport-neo4j
     ports:
     - 7474:7474

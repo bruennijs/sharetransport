@@ -1,5 +1,6 @@
-package sharetransport.domain.routing;
+package de.bruenni.sharetransport.neo4j.routing;
 
+import java.net.SocketOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,6 +25,10 @@ import org.neo4j.procedure.UserFunction;
  */
 public class HopsInTourOrderUserFunction {
 
+  private static final String PROPERTY_DESTINATION = "destination";
+
+  private static final String RELATIONSHIP_BOOKED_TO = "BOOKED_TO";
+
   @Context
   public GraphDatabaseService db;
 
@@ -42,8 +47,8 @@ public class HopsInTourOrderUserFunction {
   }
 
   private Boolean isHopADestination(Node n) {
-    if (n.hasProperty(Hop.PROPERTY_DESTINATION)) {
-      return (Boolean)n.getProperty(Hop.PROPERTY_DESTINATION);
+    if (n.hasProperty(PROPERTY_DESTINATION)) {
+      return (Boolean)n.getProperty(PROPERTY_DESTINATION);
     }
 
     return false;
@@ -67,7 +72,7 @@ public class HopsInTourOrderUserFunction {
   }
 
   private List<Node> findOriginHops(Node destination) {
-    final Iterable<Relationship> originHops = destination.getRelationships(() -> Hop.Relation.BOOKED_TO.name(), Direction.INCOMING);
+    final Iterable<Relationship> originHops = destination.getRelationships(() -> RELATIONSHIP_BOOKED_TO, Direction.INCOMING);
     return StreamSupport.stream(originHops.spliterator(), false)
         .map(relationship -> relationship.getStartNode())
         .collect(Collectors.toList());
