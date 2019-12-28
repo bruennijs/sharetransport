@@ -10,9 +10,67 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>routing</module>
         <module>neo4j</module>
+        <module>routing</module>
     </modules>
+
+    <properties>
+        <version.neo4j>3.5.9</version.neo4j>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <executions>
+                        <execution>
+                            <phase>test</phase>
+                            <id>default-test</id>
+                            <configuration>
+                                <excludes>
+                                    <exclude>**/it/**</exclude>
+                                    <exclude>**/*IT.java</exclude>
+                                </excludes>
+                                <reportsDirectory>${project.build.directory}/test-reports/unit</reportsDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <executions>
+                        <execution>
+                            <phase>integration-test</phase>
+                            <id>integration-test</id>
+                            <goals>
+                                <goal>integration-test</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>verify-results</id>
+                            <goals>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <summaryFile>${project.build.directory}/test-reports/it/failsafe-summary.xml</summaryFile>
+                        <reportsDirectory>${project.build.directory}/test-reports/it</reportsDirectory>
+                        <systemPropertyVariables>
+                        </systemPropertyVariables>
+                        <includes>
+                            <include>**/*IT.java</include>
+                        </includes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <dependencyManagement>
         <dependencies>
@@ -26,19 +84,19 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>4.4</version>
             </dependency>
-
             <dependency>
                 <groupId>org.neo4j</groupId>
                 <artifactId>neo4j</artifactId>
                 <version>${version.neo4j}</version>
             </dependency>
+
+
             <dependency>
                 <groupId>org.neo4j.test</groupId>
                 <artifactId>neo4j-harness</artifactId>
                 <version>${version.neo4j}</version>
                 <scope>test</scope>
             </dependency>
-
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -49,15 +107,14 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>1.12.1</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>3.13.2</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <properties>
-        <version.neo4j>3.5.9</version.neo4j>
-    </properties>
 </project>

@@ -1,4 +1,4 @@
-package sharetransport.infrastructure.persistence;
+package sharetransport.infrastructure.domain;
 
 /**
  * Abstract repo

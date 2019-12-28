@@ -22,25 +22,27 @@ import org.junit.runners.JUnit4;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Logging;
 import org.neo4j.driver.v1.Session;
-import org.neo4j.harness.junit.Neo4jRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
-import de.bruenni.sharetransport.neo4j.routing.HopsInTourOrderUserFunction;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
 import sharetransport.testing.tools.Neo4jTestUnit;
 
 @RunWith(JUnit4.class)
 public class RoutingIT {
 
+  private static final Integer EXPOSED_BOLT_PORT = 7687;
+
   private static Logger LOG = LoggerFactory.getLogger(RoutingIT.class);
 
-  // This rule starts a Neo4j instance
   @ClassRule
-  public static Neo4jRule neo4j = new Neo4jRule()
-
-      // This is the function we want to test
-      .withFunction( HopsInTourOrderUserFunction.class );
+  public static GenericContainer neo4j = new GenericContainer("bruenni/sharetransport-neo4j-3.5:1.0")
+      .withEnv("NEO4J_AUTH", "none")
+      //.withFileSystemBind("target/neo4j-testcontainers-procedure.jar", "/plugins/neo4j-testcontainers-procedure.jar", BindMode.READ_ONLY)
+      .waitingFor(Wait.forListeningPort())
+      .withExposedPorts(EXPOSED_BOLT_PORT);
 
   private static Neo4jDriverScope driverScope;
 
@@ -56,11 +58,15 @@ public class RoutingIT {
         .withoutEncryption()
         .toConfig();
 
-    driverScope = new Neo4jDriverScope(neo4j.boltURI(), config);
+    driverScope = new Neo4jDriverScope(getBoltUri(), config);
 
 /*    Driver ogmDriver = new BoltDriver(driverScope.getDriver());
     new SessionFactory(ogmDriver, ...);*/
 
+  }
+
+  private static URI getBoltUri() {
+    return URI.create(String.format("bolt://%s:%d", neo4j.getContainerIpAddress(), neo4j.getMappedPort(EXPOSED_BOLT_PORT)));
   }
 
   @AfterClass
@@ -95,13 +101,13 @@ public class RoutingIT {
       final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
 
       // THEN
-      assertThat(routeSpecifications.get(0).getHops())
+      assertThat(routeSpecifications.get(0).getRoute())
           .usingElementComparator(Comparator.comparing(Hop::getId))
           .containsExactly(passengerHops.get("p1").getLeft(),
               passengerHops.get("p1").getRight(),
               passengerHops.get("p2").getLeft(),
               passengerHops.get("p2").getRight());
-      assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(30);
+      assertThat(routeSpecifications.get(0).getDuration()).isEqualTo(30);
     }
   }
 
@@ -121,12 +127,39 @@ public class RoutingIT {
       final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
 
       // THEN
-      assertThat(routeSpecifications.get(0).getHops())
+      assertThat(routeSpecifications.get(0).getRoute())
           .usingElementComparator(Comparator.comparing(Hop::getId))
           .containsExactly(passengerHops.get("p2").getLeft(),
               passengerHops.get("p1").getLeft(),
               passengerHops.get("p1").getRight());
-      assertThat(routeSpecifications.get(0).getWeight()).isEqualTo(20);
+      assertThat(routeSpecifications.get(0).getDuration()).isEqualTo(20);
+    }
+  }
+
+  @Test
+  public void testWeightOfTrips() throws Throwable
+  {
+    try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
+        RoutingIT.class.getResourceAsStream("/cypher/4_hops_in_series.cypher"))) {
+
+      // GIVEN
+      final Map<String, Hop> hops = session
+          .run("MATCH (h:Hop)"
+              + " RETURN h as hop")
+          .stream()
+          .map(record -> Hop.from(record.get("hop").asNode()))
+          .collect(Collectors.toMap(hop -> hop.getUid(), val -> val));
+
+      // WHEN
+      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(hops.values().stream().collect(Collectors.toList()));
+
+      // THEN
+      final Hop hop1 = hops.get("o1");
+      final Hop hop2 = hops.get("o2");
+      assertThat(routeSpecifications.get(0).getTripWeights().keySet())
+          .containsExactly("o1", "o2");
+      assertThat(routeSpecifications.get(0).getTripWeights().get("o1")).isEqualTo(5);
+      assertThat(routeSpecifications.get(0).getTripWeights().get("o2")).isEqualTo(15);
     }
   }
 

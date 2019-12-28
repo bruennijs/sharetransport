@@ -3,15 +3,10 @@ package sharetransport.domain.routing;
 import static org.apache.commons.lang3.Validate.notEmpty;
 import static org.apache.commons.lang3.Validate.notNull;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.neo4j.driver.v1.types.Node;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
-import sharetransport.infrastructure.persistence.AbstractIdentifiable;
-import sharetransport.infrastructure.persistence.Identifiable;
+import sharetransport.infrastructure.domain.AbstractIdentifiable;
 
 /**
  * A hop is a point on land a transport must address to let a load/person
@@ -47,6 +42,18 @@ public class Hop extends AbstractIdentifiable<Long> {
         node.get(PROPERTY_UID).asString(),
         node.get(PROPERTY_ORIGIN).asBoolean(false),
         node.get(PROPERTY_DESTINATION).asBoolean(false));
+  }
+
+  public String getUid() {
+    return uid;
+  }
+
+  public Boolean getOrigin() {
+    return origin;
+  }
+
+  public Boolean getDestination() {
+    return destination;
   }
 
   public enum Relation {

@@ -4,12 +4,14 @@ import static org.apache.commons.lang3.Validate.notNull;
 import static org.neo4j.driver.v1.Values.parameters;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Map;
 
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+
+import sharetransport.infrastructure.collection.Collectors;
 
 /**
  * Finds optimal routes between hops
@@ -32,28 +34,46 @@ public class RoutingService {
    */
   public List<RouteSpecification> findRoutesByHops(List<Hop> hops) {
 
-    hops = hops.stream().distinct().collect(Collectors.toList());
+    hops = hops.stream().distinct().collect(java.util.stream.Collectors.toList());
 
-    final Value parameters = parameters("hopIds", hops.stream().map(h -> h.getId()).collect(Collectors.toList()));
+    final Value parameters = parameters("hopUids", hops.stream().map(h -> h.getUid()).collect(java.util.stream.Collectors.toList()));
 
-      final StatementResult result = session.run(String.format("MATCH p=(:Hop)-[d:DISTANCE*%d]->(:Hop)\n"
-          + " WHERE ALL (hopId IN {hopIds} WHERE hopId IN [n IN nodes(p) | id(n)])"
-          + "   AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)\n"
-          + " RETURN p as route,\n"
-          + "       nodes(p) as hops,\n"
-          + "       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights"
-          + " ORDER BY sumWeights ASC", numberOfHopEdges(hops)), parameters);
+      final StatementResult result = session.run(String.format("MATCH p=(root:Hop)-[d:DISTANCE*1..%d]->(end:Hop)\n"
+          + "  WHERE apoc.coll.isEqualCollection([n IN nodes(p) | n.uid], {hopUids})\n"
+          + "  AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)\n"
+          + "WITH p AS path,\n"
+          + "      root,\n"
+          + "     nodes(p) AS hops,\n"
+          + "     filter (n IN nodes(p) WHERE n.origin = true) AS origins\n"
+          + "UNWIND origins AS origin\n"
+          + "MATCH (origin)-[:BOOKED_TO]->(destination:Hop)\n"
+          + "WITH path,\n"
+          + "     hops,\n"
+          + "     origin,\n"
+          + "     de.bruenni.sharetransport.neo4j.routing.weightOf(root, origin, path) AS tripWaitWeight,\n"
+          + "     de.bruenni.sharetransport.neo4j.routing.weightOf(origin, destination, path) AS tripWeight\n"
+          + "RETURN hops,\n"
+          + "       apoc.map.mergeList ( collect (apoc.map.fromLists([origin.uid], [tripWeight]))) AS tripWeights,\n"
+          + "       reduce(sum=0, r IN relationships(path) | r.weight + sum) AS pathWeight\n"
+          + "ORDER BY pathWeight ASC;", numberOfHopEdges(hops)), parameters);
 
       return result
           .stream()
-          .map(record -> RouteSpecification.from(
-              record.get("hops").asList(hop -> Hop.from(hop.asNode())),
-              record.get("sumWeights").asInt(),
-              record.get("route").asPath()))
-          .collect(Collectors.toList());
+          .map(RoutingService::fromRecord)
+          .collect(java.util.stream.Collectors.toList());
   }
 
   private Integer numberOfHopEdges(List<Hop> hops) {
     return hops.size() - 1;
+  }
+
+  private static RouteSpecification fromRecord(Record record) {
+    final List<Hop> hops = record.get("hops").asList(hop -> Hop.from(hop.asNode()));
+    final Map<String, Integer> tripWeights = record.get("tripWeights").asMap(value -> value.asInt());
+
+    return RouteSpecification.from(
+        hops,
+        record.get("pathWeight").asInt(),
+        tripWeights);
   }
 }

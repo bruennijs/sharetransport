@@ -3,8 +3,7 @@ package sharetransport.domain.routing;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.List;
-
-import org.neo4j.driver.v1.types.Path;
+import java.util.Map;
 
 /**
  * Contains a list of hops in an ordered list which is the order of an valid route
@@ -14,28 +13,35 @@ import org.neo4j.driver.v1.types.Path;
  */
 public class RouteSpecification {
 
-  private final Integer sumWeights;
+  private final Integer duration;
 
-  private List<Hop> hops;
+  private final List<Hop> route;
 
-  public RouteSpecification(List<Hop> hops, Integer sumWeights) {
-    this.hops = notNull(hops, "hops cannot be null");
-    this.sumWeights = notNull(sumWeights, " cannot be null");
+  private final Map<String, Integer> tripWeights;
+
+  public List<Hop> getRoute() {
+    return route;
   }
 
-  public List<Hop> getHops() {
-    return hops;
+  public RouteSpecification(List<Hop> hops, Integer duration, final Map<String, Integer> tripWeights) {
+    this.route = notNull(hops, "hops cannot be null");
+    this.duration = notNull(duration, "duration cannot be null");
+    this.tripWeights = notNull(tripWeights, "tripWeights cannot be null");
   }
 
-  public static RouteSpecification from(List<Hop> hops, Integer sumWeights, Path path) {
-    return new RouteSpecification(hops, sumWeights);
+  public static RouteSpecification from(List<Hop> hops, Integer duration, Map<String, Integer> tripWeights) {
+    return new RouteSpecification(hops, duration, tripWeights);
   }
 
   /**
-   * Gets the overall weight of all hops along the route.
+   * Gets the overall duration of all hops along the route.
    * @return
    */
-  public Integer getWeight() {
-    return sumWeights;
+  public Integer   getDuration() {
+    return duration;
+  }
+
+  public Map<String, Integer> getTripWeights() {
+    return tripWeights;
   }
 }

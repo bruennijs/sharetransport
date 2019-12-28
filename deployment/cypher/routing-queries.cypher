@@ -8,21 +8,31 @@ RETURN p as route,
 
 MATCH p=(h1:Hop)-[d:DISTANCE*3]->(h2:Hop)
   WHERE ALL (uid IN ['o1', 'o2', 'd1', 'd2'] WHERE uid IN [n IN nodes(p) | n.uid])
+AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)
 RETURN p as route,
        nodes(p) as nodes,
        extract (n IN nodes(p) | n.uid) as uids,
        reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
   ORDER BY sumWeights ASC;
 
-MATCH p=(h1:Hop)-[d:DISTANCE*3]->(h2:Hop)
-  WHERE ALL (uid IN ['o1', 'o2', 'd1', 'd2'] WHERE uid IN [n IN nodes(p) | n.uid])
-WITH p as route,
-      nodes(p) as nodes,
-       extract (n IN nodes(p) | n.uid) as uids,
-       reduce(sum=0, r IN relationships(p) | r.weight + sum) as sumWeights
-UNWIND nodes
-
-ORDER BY sumWeights ASC;
+MATCH p=(root:Hop)-[d:DISTANCE*1..3]->(end:Hop)
+  WHERE apoc.coll.isEqualCollection([n IN nodes(p) | n.uid], ['o1', 'd1', 'o2', 'd2'])
+  AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)
+WITH p AS path,
+      root,
+     nodes(p) AS hops,
+     filter (n IN nodes(p) WHERE n.origin = true) AS origins
+UNWIND origins AS origin
+MATCH (origin)-[:BOOKED_TO]->(destination:Hop)
+WITH path,
+     hops,
+     origin,
+     de.bruenni.sharetransport.neo4j.routing.weightOf(root, origin, path) AS tripWaitWeight,
+     de.bruenni.sharetransport.neo4j.routing.weightOf(origin, destination, path) AS tripWeight
+RETURN extract (n IN nodes(path) | n.uid) AS uids,
+       apoc.map.mergeList(collect (apoc.map.fromLists([origin.uid], [tripWeight]))) AS tripWeights,
+       reduce(sum=0, r IN relationships(path) | r.weight + sum) AS pathWeight
+ORDER BY pathWeight ASC;
 
 MATCH p=(h:Hop)-[*..1]->(:Hop)
 RETURN h as origin,
@@ -38,5 +48,5 @@ RETURN h as from, h2 as to, p as route, hFrom as hBookedTo*/
 MATCH p=(h)
 DETACH DELETE h;
 
-MATCH (h:Hop {name: 'o1'}) RETURN h as hop;
+MATCH p=(h:Hop)-->() RETURN h as hop, p as path;
 
