@@ -13,7 +13,7 @@ services:
     environment:
       - NEO4J_AUTH=none
       # https://neo4j.com/docs/labs/apoc/3.5/introduction/
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.\\\*
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,algo.*
     # volumes:
     #- ./data:/data
     # - ./neo4j/cypher:/init

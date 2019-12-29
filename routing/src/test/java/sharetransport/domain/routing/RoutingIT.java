@@ -89,7 +89,7 @@ public class RoutingIT {
   public void whenRouteAllHopsExpectShortestPathIsCorrect() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/4_hops_in_series.cypher"))) {
+        RoutingIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
 
       final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
           .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
@@ -115,7 +115,7 @@ public class RoutingIT {
   public void whenTwoOriginClusterAndOneDestinationExpectShortestPAthViaAllOrigins() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/3_hops_by_two_origins_and_one_destination.cypher"))) {
+        RoutingIT.class.getResourceAsStream("/cypher/routing/3_hops_by_two_origins_and_one_destination.cypher"))) {
 
       final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
           .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
@@ -140,7 +140,7 @@ public class RoutingIT {
   public void testWeightOfTrips() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/4_hops_in_series.cypher"))) {
+        RoutingIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
 
       // GIVEN
       final Map<String, Hop> hops = session
@@ -154,8 +154,6 @@ public class RoutingIT {
       final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(hops.values().stream().collect(Collectors.toList()));
 
       // THEN
-      final Hop hop1 = hops.get("o1");
-      final Hop hop2 = hops.get("o2");
       assertThat(routeSpecifications.get(0).getTripWeights().keySet())
           .containsExactly("o1", "o2");
       assertThat(routeSpecifications.get(0).getTripWeights().get("o1")).isEqualTo(5);

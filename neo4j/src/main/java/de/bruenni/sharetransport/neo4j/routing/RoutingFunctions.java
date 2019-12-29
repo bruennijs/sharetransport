@@ -53,24 +53,23 @@ public class RoutingFunctions {
 
   @UserFunction
   @Description("de.bruenni.sharetransport.neo4j.routing.tripWeight(Node from, Node to, Path path) - Calculates weight between from and to node hops along the path")
-  public Long weightOf(@Name(value = "origin") Node from, @Name(value = "to") Node to, @Name(value = "path") Path path) {
+  public Long weightOf(@Name(value = "from") Node from, @Name(value = "to") Node to, @Name(value = "path") Path path) {
     return PathTraverser.traverse(path, RELATIONSHIP_DISTANCE)
-        .filter(rangeFilter(from, to))
+        .filter(rangeFilter(from, to, new AtomicBoolean(true)))
         .collect(Collectors.summingLong(relation -> (Long)relation.getProperty(PROPERTY_RELATION_DISTANCE_WEIGHT)));
   }
 
-  private Predicate<? super Relationship> rangeFilter(Node from, Node to) {
-    AtomicBoolean doFilter = new AtomicBoolean(true);
+  private Predicate<? super Relationship> rangeFilter(Node from, Node to, AtomicBoolean includeCurrentRelation) {
     return relationship -> {
       if (relationship.getStartNode().equals(from)) {
-        doFilter.set(false);
+        includeCurrentRelation.set(true);
       }
 
       if (relationship.getStartNode().equals(to)) {
-        doFilter.set(true);
+        includeCurrentRelation.set(false);
       }
 
-      return doFilter.get();
+      return includeCurrentRelation.get();
     };
   }
 
