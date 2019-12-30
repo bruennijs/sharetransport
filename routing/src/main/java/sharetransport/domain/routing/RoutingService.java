@@ -1,79 +1,54 @@
 package sharetransport.domain.routing;
 
 import static org.apache.commons.lang3.Validate.notNull;
-import static org.neo4j.driver.v1.Values.parameters;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Value;
-
-import sharetransport.infrastructure.collection.Collectors;
+import sharetransport.domain.routing.path.Path;
 
 /**
- * Finds optimal routes between hops
+ * 1. Calculates distance weights between many hops of one ride community
+ * 1.1 Persisting to neo4j
+ * 2. Find clusters of hops that are close to each other
+ * 3. Find paths with high passenger density / workload in relation to short mean trip time for each passenger
  *
  * @author Oliver Brüntje
  */
 public class RoutingService {
 
-  private Session session;
+  private HopRepository repository;
 
-  public RoutingService(Session session) {
-    this.session = notNull(session, "session cannot be null");
+  public RoutingService(HopRepository repository) {
+    this.repository = notNull(repository, "repository cannot be null");
   }
 
   /**
-   * Finds shortest path visiting all hops. Only routes where destination hops are
-   * behind their origin hops are returned.
-   * @param hops all hops to navigate to.
-   * @return List of possible routes
+   * Finds a set of ordered lists of paths. Each set entry is a list of distinct paths. The list of paths is ordered by its duration.
+   * Each list contains paths of alternative path to connect all hops of that path. The hops of one list cannot be part of any other list.
+   * @param specification
+   * @return Set of ordered lists of path.
    */
-  public List<RouteSpecification> findRoutesByHops(List<Hop> hops) {
+  public Set<List<Path>> findDistinctPaths(RideCommunitySpecification specification) {
+    specification.getTrips().stream()
+        .flatMap(RoutingService::createHopsFromTrip)
+        .map(this::persistHops)
+        .collect(Collectors.toList());
 
-    hops = hops.stream().distinct().collect(java.util.stream.Collectors.toList());
-
-    final Value parameters = parameters("hopUids", hops.stream().map(h -> h.getUid()).collect(java.util.stream.Collectors.toList()));
-
-      final StatementResult result = session.run(String.format("MATCH p=(root:Hop)-[d:DISTANCE*1..%d]->(end:Hop)\n"
-          + "  WHERE apoc.coll.isEqualCollection([n IN nodes(p) | n.uid], {hopUids})\n"
-          + "  AND de.bruenni.sharetransport.neo4j.routing.areHopsInOrder(p)\n"
-          + "WITH p AS path,\n"
-          + "      root,\n"
-          + "     nodes(p) AS hops,\n"
-          + "     filter (n IN nodes(p) WHERE n.origin = true) AS origins\n"
-          + "UNWIND origins AS origin\n"
-          + "MATCH (origin)-[:BOOKED_TO]->(destination:Hop)\n"
-          + "WITH path,\n"
-          + "     hops,\n"
-          + "     origin,\n"
-          + "     de.bruenni.sharetransport.neo4j.routing.weightOf(root, origin, path) AS tripWaitWeight,\n"
-          + "     de.bruenni.sharetransport.neo4j.routing.weightOf(origin, destination, path) AS tripWeight\n"
-          + "RETURN hops,\n"
-          + "       apoc.map.mergeList ( collect (apoc.map.fromLists([origin.uid], [tripWeight]))) AS tripWeights,\n"
-          + "       reduce(sum=0, r IN relationships(path) | r.weight + sum) AS pathWeight\n"
-          + "ORDER BY pathWeight ASC;", numberOfHopEdges(hops)), parameters);
-
-      return result
-          .stream()
-          .map(RoutingService::fromRecord)
-          .collect(java.util.stream.Collectors.toList());
+    return Collections.singleton(Collections.EMPTY_LIST);
   }
 
-  private Integer numberOfHopEdges(List<Hop> hops) {
-    return hops.size() - 1;
+  private Hop persistHops(Hop hop) {
+    return this.repository.createOrUpdate(hop);
   }
 
-  private static RouteSpecification fromRecord(Record record) {
-    final List<Hop> hops = record.get("hops").asList(hop -> Hop.from(hop.asNode()));
-    final Map<String, Integer> tripWeights = record.get("tripWeights").asMap(value -> value.asInt());
+  private static Stream<Hop> createHopsFromTrip(Trip trip) {
+    final Hop origin = new Hop(trip.getOrigin().getUid(), true, false);
+    final Hop destination = new Hop(trip.getDestination().getUid(), false, true);
 
-    return RouteSpecification.from(
-        hops,
-        record.get("pathWeight").asInt(),
-        tripWeights);
+    return Stream.of(origin, destination);
   }
 }

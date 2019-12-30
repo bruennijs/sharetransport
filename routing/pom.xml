@@ -16,7 +16,7 @@
 
     <properties>
         <version.neo4j-java-driver>1.7.5</version.neo4j-java-driver>
-        <version.neo4j-ogm>3.2.1</version.neo4j-ogm>
+        <version.neo4j-ogm>3.1.14</version.neo4j-ogm>
         <version.cdi-api>2.0</version.cdi-api>
         <version.slf4j>1.7.28</version.slf4j>
     </properties>
@@ -57,10 +57,6 @@
             <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.enterprise</groupId>
             <artifactId>cdi-api</artifactId>
             <version>${version.cdi-api}</version>
@@ -85,6 +81,11 @@
             <version>${version.slf4j}</version>
         </dependency>
 
+        <!-- NEO4J -->
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
@@ -96,10 +97,9 @@
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-ogm-core</artifactId>
             <version>${version.neo4j-ogm}</version>
-            <scope>compile</scope>
         </dependency>
 
-        <!-- Only add if you're using the Bolt driver -->
+        <!-- Only add if you're using the Bolt driver on runtime to connect to database else use http driver-->
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-ogm-bolt-driver</artifactId>
@@ -119,9 +119,10 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Only add if you're using the Bolt driver in integration tests -->
         <dependency>
             <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-ogm-embedded-driver</artifactId>
+            <artifactId>neo4j-ogm-bolt-driver</artifactId>
             <version>${version.neo4j-ogm}</version>
             <scope>test</scope>
         </dependency>

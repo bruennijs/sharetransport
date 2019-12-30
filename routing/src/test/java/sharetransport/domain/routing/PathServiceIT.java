@@ -27,15 +27,17 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import sharetransport.domain.routing.path.Path;
+import sharetransport.domain.routing.path.PathService;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
 import sharetransport.testing.tools.Neo4jTestUnit;
 
 @RunWith(JUnit4.class)
-public class RoutingIT {
+public class PathServiceIT {
 
   private static final Integer EXPOSED_BOLT_PORT = 7687;
 
-  private static Logger LOG = LoggerFactory.getLogger(RoutingIT.class);
+  private static Logger LOG = LoggerFactory.getLogger(PathServiceIT.class);
 
   @ClassRule
   public static GenericContainer neo4j = new GenericContainer("bruenni/sharetransport-neo4j-3.5:1.0")
@@ -46,7 +48,7 @@ public class RoutingIT {
 
   private static Neo4jDriverScope driverScope;
 
-  private static RoutingService sut;
+  private static PathService sut;
 
   private Session session;
 
@@ -59,10 +61,6 @@ public class RoutingIT {
         .toConfig();
 
     driverScope = new Neo4jDriverScope(getBoltUri(), config);
-
-/*    Driver ogmDriver = new BoltDriver(driverScope.getDriver());
-    new SessionFactory(ogmDriver, ...);*/
-
   }
 
   private static URI getBoltUri() {
@@ -77,7 +75,7 @@ public class RoutingIT {
   @Before
   public void before() {
     session = driverScope.getDriver().session();
-    sut = new RoutingService(session);
+    sut = new PathService(session);
   }
 
   @After
@@ -89,7 +87,7 @@ public class RoutingIT {
   public void whenRouteAllHopsExpectShortestPathIsCorrect() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
+        PathServiceIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
 
       final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
           .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
@@ -98,7 +96,7 @@ public class RoutingIT {
           .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
               val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
 
-      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
+      final List<Path> routeSpecifications = sut.findPathByHops(getNodes(passengerHops));
 
       // THEN
       assertThat(routeSpecifications.get(0).getRoute())
@@ -115,7 +113,7 @@ public class RoutingIT {
   public void whenTwoOriginClusterAndOneDestinationExpectShortestPAthViaAllOrigins() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/routing/3_hops_by_two_origins_and_one_destination.cypher"))) {
+        PathServiceIT.class.getResourceAsStream("/cypher/routing/3_hops_by_two_origins_and_one_destination.cypher"))) {
 
       final Map<String, ImmutablePair<Hop, Hop>> passengerHops = session
           .run("MATCH (hopOn:Hop)<-[:HOPS_ON]-(p:Passenger)-[:HOPS_OFF]->(hopOff:Hop)"
@@ -124,7 +122,7 @@ public class RoutingIT {
           .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
               val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
 
-      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(getNodes(passengerHops));
+      final List<Path> routeSpecifications = sut.findPathByHops(getNodes(passengerHops));
 
       // THEN
       assertThat(routeSpecifications.get(0).getRoute())
@@ -140,7 +138,7 @@ public class RoutingIT {
   public void testWeightOfTrips() throws Throwable
   {
     try (Neo4jTestUnit dbUnit = Neo4jTestUnit.create(session,
-        RoutingIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
+        PathServiceIT.class.getResourceAsStream("/cypher/routing/4_hops_in_series.cypher"))) {
 
       // GIVEN
       final Map<String, Hop> hops = session
@@ -151,7 +149,7 @@ public class RoutingIT {
           .collect(Collectors.toMap(hop -> hop.getUid(), val -> val));
 
       // WHEN
-      final List<RouteSpecification> routeSpecifications = sut.findRoutesByHops(hops.values().stream().collect(Collectors.toList()));
+      final List<Path> routeSpecifications = sut.findPathByHops(hops.values().stream().collect(Collectors.toList()));
 
       // THEN
       assertThat(routeSpecifications.get(0).getTripWeights().keySet())

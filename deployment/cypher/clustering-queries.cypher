@@ -5,6 +5,20 @@ CALL algo.louvain.stream('Hop', 'DISTANCE', {
 }) YIELD nodeId, community, communities
 RETURN algo.asNode(nodeId).uid, community, communities;
 
+CALL algo.scc.stream('Hop', 'DISTANCE', {
+  weightProperty: 'weight',
+//levels: 3,
+  direction: 'BOTH'
+}) YIELD nodeId, partition
+RETURN algo.asNode(nodeId).uid, partition
+
+CALL algo.wcc.stream('Hop', 'DISTANCE', {
+  weightProperty: 'weight',
+  levels: 3,
+  direction: 'BOTH'
+}) YIELD nodeId, setId
+RETURN algo.asNode(nodeId).uid, setId
+
 MATCH (h1:Hop), (h2:Hop)
 WHERE h1 <> h2
 RETURN h1.uid, h2.uid;

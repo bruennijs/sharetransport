@@ -1,9 +1,11 @@
-package sharetransport.domain.routing;
+package sharetransport.domain.routing.path;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.List;
 import java.util.Map;
+
+import sharetransport.domain.routing.Hop;
 
 /**
  * Contains a list of hops in an ordered list which is the order of an valid route
@@ -11,7 +13,7 @@ import java.util.Map;
  * along this route.
  * @author Oliver Brüntje
  */
-public class RouteSpecification {
+public class Path {
 
   private final Integer duration;
 
@@ -23,14 +25,14 @@ public class RouteSpecification {
     return route;
   }
 
-  public RouteSpecification(List<Hop> hops, Integer duration, final Map<String, Integer> tripWeights) {
+  public Path(List<Hop> hops, Integer duration, final Map<String, Integer> tripWeights) {
     this.route = notNull(hops, "hops cannot be null");
     this.duration = notNull(duration, "duration cannot be null");
     this.tripWeights = notNull(tripWeights, "tripWeights cannot be null");
   }
 
-  public static RouteSpecification from(List<Hop> hops, Integer duration, Map<String, Integer> tripWeights) {
-    return new RouteSpecification(hops, duration, tripWeights);
+  public static Path from(List<Hop> hops, Integer duration, Map<String, Integer> tripWeights) {
+    return new Path(hops, duration, tripWeights);
   }
 
   /**
