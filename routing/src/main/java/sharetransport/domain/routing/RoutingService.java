@@ -8,6 +8,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.transaction.Transaction;
+
 import sharetransport.domain.routing.path.Path;
 
 /**
@@ -20,10 +23,16 @@ import sharetransport.domain.routing.path.Path;
  */
 public class RoutingService {
 
+  private Session session;
+
   private HopRepository repository;
 
-  public RoutingService(HopRepository repository) {
+  private CommunityRepository communityRepository;
+
+  public RoutingService(Session session, HopRepository repository, CommunityRepository communityRepository) {
+    this.session = notNull(session, "session cannot be null");
     this.repository = notNull(repository, "repository cannot be null");
+    this.communityRepository = notNull(communityRepository, "communityRepository cannot be null");
   }
 
   /**
@@ -33,12 +42,27 @@ public class RoutingService {
    * @return Set of ordered lists of path.
    */
   public Set<List<Path>> findDistinctPaths(RideCommunitySpecification specification) {
-    specification.getTrips().stream()
-        .flatMap(RoutingService::createHopsFromTrip)
-        .map(this::persistHops)
-        .collect(Collectors.toList());
+    try (Transaction tx = session.beginTransaction()) {
+      final Set<Hop> communityHops = specification.getTrips().stream()
+          .flatMap(RoutingService::createHopsFromTrip)
+          .map(this::persistHops)
+          .collect(Collectors.toSet());
 
-    return Collections.singleton(Collections.EMPTY_LIST);
+      final Community community = createHopCommunity(communityHops);
+
+      // TBD: call python for finding cluster in all community hops
+
+      tx.commit();
+
+      return Collections.singleton(Collections.EMPTY_LIST);
+    }
+  }
+
+  private Community createHopCommunity(Set<Hop> hops) {
+    final Community community = new Community();
+    hops.stream().forEach(hop -> community.contains(hop));
+
+    return communityRepository.createOrUpdate(community);
   }
 
   private Hop persistHops(Hop hop) {
