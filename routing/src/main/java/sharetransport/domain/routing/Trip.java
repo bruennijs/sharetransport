@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import sharetransport.infrastructure.domain.AbstractValueObject;
-import sharetransport.infrastructure.domain.geo.GeoPointDouble;
+import sharetransport.infrastructure.domain.geo.Location;
 
 /**
  * A trip is a connection between a origin geo point and a destination geo point
@@ -36,16 +36,16 @@ public class Trip extends AbstractValueObject {
   }
 
   public static class Hop extends AbstractValueObject {
-    private final GeoPointDouble point;
+    private final Location point;
 
     private final String uid;
 
-    public Hop(String uid, GeoPointDouble point) {
+    public Hop(String uid, Location point) {
       this.uid = notEmpty(uid, "String uid cannot be empty");
       this.point = notNull(point, "point cannot be null");
     }
 
-    public GeoPointDouble getPoint() {
+    public Location getPoint() {
       return point;
     }
 

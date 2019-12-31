@@ -5,14 +5,14 @@ package sharetransport.infrastructure.domain.geo;
  *
  * @author Oliver Brüntje
  */
-public class GeoPointDouble extends GeoPoint<Double> {
+public class Location extends AbstractLocation<Double> {
     /**
      * Constructor
      *
      * @param latitude
      * @param longitude
      */
-    public GeoPointDouble(Double latitude, Double longitude) {
+    public Location(Double latitude, Double longitude) {
         super(latitude, longitude);
     }
 }

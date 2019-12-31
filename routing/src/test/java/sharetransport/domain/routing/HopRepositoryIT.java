@@ -3,13 +3,14 @@ package sharetransport.domain.routing;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.net.URI;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -18,11 +19,13 @@ import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Logging;
 import org.neo4j.ogm.drivers.bolt.driver.BoltDriver;
 import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.transaction.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import sharetransport.infrastructure.domain.geo.Location;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jOgmProvider;
 
@@ -51,6 +54,8 @@ public class HopRepositoryIT {
 
   private Session session;
 
+  private final Location defaultLocation = new Location(8.1, 55.22);
+
   @BeforeClass
   public static void beforeClass() {
     final Config config = Config.build()
@@ -77,19 +82,19 @@ public class HopRepositoryIT {
   @Before
   public void before() {
     session = ogmProvider.createSession();
+    this.session.purgeDatabase();
     sut = new HopRepository(session);
   }
 
   @After
   public void tearDown() throws Exception {
-    //this.session.purgeDatabase();
     ogmProvider.onSessionScopeDispose(this.session);
   }
 
   @Test
   public void whenPersistHopExpectIdGenerated() {
     // GIVEN
-    final Hop hop = new Hop("uid", true, false);
+    final Hop hop = new Hop("uid", true, false, defaultLocation);
 
     // WHEN
     final Hop createdHop = sut.createOrUpdate(hop);
@@ -103,28 +108,41 @@ public class HopRepositoryIT {
   @Test
   public void whenPersistExpectPropertiesSet() {
     // GIVEN
-    final Hop hop = new Hop("someuid", true, false);
+    final Hop hop = new Hop("someuid", true, false, defaultLocation);
 
     // WHEN
     final Hop createdHop = sut.createOrUpdate(hop);
 
     // THEN
     assertThat(createdHop.getUid()).isEqualTo("someuid");
-    assertThat(createdHop.getOrigin()).isEqualTo(true);
-    assertThat(createdHop.getDestination()).isEqualTo(false);
+    assertThat(createdHop.isOrigin()).isEqualTo(true);
+    assertThat(createdHop.isDestination()).isEqualTo(false);
   }
 
   @Test
   public void whenBookedToRelationExpect() {
-    Assert.fail();
+    final Hop origin = new Hop(UUID.randomUUID().toString(), false, false, defaultLocation);
+    final Hop destination = new Hop(UUID.randomUUID().toString(), false, false, defaultLocation);
+
+    origin.bookedTo(destination);
+
+    sut.createOrUpdate(origin);
+
+    // THEN
+    final Hop loadedDestination = sut.find(destination.getId());
+    assertThat(origin.getBookedTo()).isEqualTo(destination);
+    assertThat(origin.isOrigin()).isTrue();
+
+    //assertThat(loadedDestination.getBookedFrom()).isEqualTo(origin);  not yet needed in logic
+    assertThat(loadedDestination.isDestination()).isTrue();
   }
 
   @Test
   public void whenPersistTwoHopsWithOneDistanceRelationExpectOutgoingAndIncomingRelationOnEachHop() {
-    final Hop origin = new Hop("uid1", true, false);
-    final Hop destination = new Hop("uid1", false, true);
-    final HopDistance hopDistance = new HopDistance(origin, destination, 4711);
-    origin.getDistancesTo().add(hopDistance);
+    final Hop origin = new Hop(UUID.randomUUID().toString(), true, false, defaultLocation);
+    final Hop destination = new Hop(UUID.randomUUID().toString(), false, true, defaultLocation);
+    final Duration duration = Duration.ofSeconds(20);
+    origin.addDistanceTo(destination, duration);
 
     // WHEN
     sut.createOrUpdate(origin);
@@ -133,13 +151,54 @@ public class HopRepositoryIT {
 
     // THEN
     assertThat(hopDestinationFound.getDistancesIncoming().size()).isEqualTo(1);
-    assertThat(hopDestinationFound.getDistancesIncoming().stream().findFirst().get().getWeight()).isEqualTo(hopDistance.getWeight());
+    assertThat(hopDestinationFound.getDistancesIncoming().stream().findFirst().get().getDuration().getSeconds()).isEqualTo(20);
   }
 
+  @Test
+  public void whenHopWithLocationExpectPersistedCorrectly() {
+    final Location expectedLocation = new Location(8.12, 57.23);
+    final Hop origin = new Hop(UUID.randomUUID().toString(), true, false, expectedLocation);
+
+    // WHEN
+    final Hop created = sut.createOrUpdate(origin);
+
+    // THEN
+    final Hop loaded = sut.find(created.getId());
+
+    assertThat(loaded.getLocation()).isEqualTo(expectedLocation);
+  }
 
   @Test
   public void whenTransactionExpectOK() {
-    Assert.fail();
+    final String uid = "someuid";
+    final Hop hop = new Hop(uid, true, false, defaultLocation);
+    try (Transaction tx = session.beginTransaction()) {
+      // GIVEN
+
+      // WHEN
+      final Hop createdHop = sut.createOrUpdate(hop);
+
+      // THEN
+      assertThat(createdHop.getUid()).isEqualTo(uid);
+      assertThat(createdHop.isOrigin()).isEqualTo(true);
+      assertThat(createdHop.isDestination()).isEqualTo(false);
+
+      final Optional<Hop> hopByUid = sut.findByUid(uid);
+
+      assertThat(hopByUid.isPresent()).isTrue();
+      assertThat(hopByUid.get()).isEqualTo(createdHop);
+      assertThat(hopByUid.get()).isEqualTo(hop);
+
+      tx.commit();
+    }
+
+    // create new session and load committed items
+    final Session session = ogmProvider.createSession();
+    final HopRepository repository = new HopRepository(session);
+    final Optional<Hop> hopByUid = repository.findByUid(uid);
+
+    assertThat(hopByUid.isPresent()).isTrue();
+    assertThat(hopByUid.get()).isEqualTo(hop);
   }
 
   @Test
@@ -149,7 +208,7 @@ public class HopRepositoryIT {
     Function<HopRepository, Hop> persistHop = (repo) -> {
       Session session = ogmProvider.createSession();
       try {
-        final Hop hop = new Hop("uid1", true, true);
+        final Hop hop = new Hop(UUID.randomUUID().toString(), true, true, defaultLocation);
 
         return repo.createOrUpdate(hop);
       } finally {

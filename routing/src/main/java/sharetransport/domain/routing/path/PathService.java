@@ -10,8 +10,11 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Value;
+import org.neo4j.driver.v1.types.Node;
 
 import sharetransport.domain.routing.Hop;
+import sharetransport.infrastructure.domain.AbstractIdentifiable;
+import sharetransport.infrastructure.domain.geo.Location;
 
 /**
  * Finds optimal routes between hops
@@ -68,12 +71,26 @@ public class PathService {
   }
 
   private static Path fromRecord(Record record) {
-    final List<Hop> hops = record.get("hops").asList(hop -> Hop.from(hop.asNode()));
+    final List<Hop> hops = record.get("hops").asList(hop -> createHopFromNode(hop.asNode()));
     final Map<String, Integer> tripWeights = record.get("tripWeights").asMap(value -> value.asInt());
 
     return Path.from(
         hops,
         record.get("pathWeight").asInt(),
         tripWeights);
+  }
+
+  private static Hop createHopFromNode(Node node) {
+    return new TestHop(node.id(),
+        node.get(AbstractIdentifiable.PROPERTY_UID).asString(),
+        node.get(Hop.PROPERTY_ORIGIN).asBoolean(false),
+        node.get(Hop.PROPERTY_DESTINATION).asBoolean(false),
+        new Location(8.1, 57.1));
+  }
+  private static class TestHop extends Hop {
+    public TestHop(long id, String uid, boolean asBoolean, boolean asBoolean1, Location location) {
+      super(id, uid, asBoolean, asBoolean1, location);
+    }
+
   }
 }

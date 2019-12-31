@@ -22,6 +22,7 @@ import org.junit.runners.JUnit4;
 import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Logging;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.types.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -29,6 +30,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 import sharetransport.domain.routing.path.Path;
 import sharetransport.domain.routing.path.PathService;
+import sharetransport.infrastructure.domain.AbstractIdentifiable;
+import sharetransport.infrastructure.domain.geo.Location;
 import sharetransport.infrastructure.persistence.neo4j.Neo4jDriverScope;
 import sharetransport.testing.tools.Neo4jTestUnit;
 
@@ -94,7 +97,7 @@ public class PathServiceIT {
               + " RETURN hopOff as off, hopOn as on, p as passenger")
           .stream()
           .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
-              val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
+              val -> ImmutablePair.of(createHopFromNode(val.get("on").asNode()), createHopFromNode(val.get("off").asNode()))));
 
       final List<Path> routeSpecifications = sut.findPathByHops(getNodes(passengerHops));
 
@@ -120,7 +123,7 @@ public class PathServiceIT {
               + " RETURN hopOff as off, hopOn as on, p as passenger")
           .stream()
           .collect(Collectors.toMap(record -> record.get("passenger").get("uid").asString(),
-              val -> ImmutablePair.of(Hop.from(val.get("on").asNode()), Hop.from(val.get("off").asNode()))));
+              val -> ImmutablePair.of(createHopFromNode(val.get("on").asNode()), createHopFromNode(val.get("off").asNode()))));
 
       final List<Path> routeSpecifications = sut.findPathByHops(getNodes(passengerHops));
 
@@ -145,7 +148,7 @@ public class PathServiceIT {
           .run("MATCH (h:Hop)"
               + " RETURN h as hop")
           .stream()
-          .map(record -> Hop.from(record.get("hop").asNode()))
+          .map(record -> createHopFromNode(record.get("hop").asNode()))
           .collect(Collectors.toMap(hop -> hop.getUid(), val -> val));
 
       // WHEN
@@ -165,5 +168,19 @@ public class PathServiceIT {
         .stream()
         .flatMap(p -> Lists.newArrayList(p.getLeft(), p.getRight()).stream())
         .collect(Collectors.toList());
+  }
+
+  private static Hop createHopFromNode(Node node) {
+    return new TestHop(node.id(),
+        node.get(AbstractIdentifiable.PROPERTY_UID).asString(),
+        node.get(Hop.PROPERTY_ORIGIN).asBoolean(false),
+        node.get(Hop.PROPERTY_DESTINATION).asBoolean(false),
+        new Location(8.1, 57.1));
+  }
+
+  private static class TestHop extends Hop {
+    public TestHop(long id, String uid, boolean asBoolean, boolean asBoolean1, Location location) {
+      super(id, uid, asBoolean, asBoolean1, location);
+    }
   }
 }

@@ -46,8 +46,8 @@ public class RoutingService {
   }
 
   private static Stream<Hop> createHopsFromTrip(Trip trip) {
-    final Hop origin = new Hop(trip.getOrigin().getUid(), true, false);
-    final Hop destination = new Hop(trip.getDestination().getUid(), false, true);
+    final Hop origin = new Hop(trip.getOrigin().getUid(), true, false, trip.getOrigin().getPoint());
+    final Hop destination = new Hop(trip.getDestination().getUid(), false, true, trip.getDestination().getPoint());
 
     return Stream.of(origin, destination);
   }

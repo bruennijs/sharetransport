@@ -9,7 +9,7 @@ import sharetransport.infrastructure.domain.AbstractValueObject;
  *
  * @author Oliver Brüntje
  */
-public class GeoPoint<T extends Serializable> extends AbstractValueObject {
+public class AbstractLocation<T extends Serializable> extends AbstractValueObject {
 	private final T latitude;
 	private final T longitude;
 
@@ -18,7 +18,7 @@ public class GeoPoint<T extends Serializable> extends AbstractValueObject {
 	 * @param latitude
 	 * @param longitude
 	 */
-	public GeoPoint(T latitude, T longitude) {
+	public AbstractLocation(T latitude, T longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
@@ -33,7 +33,7 @@ public class GeoPoint<T extends Serializable> extends AbstractValueObject {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		GeoPoint geoPoint = (GeoPoint) o;
+		AbstractLocation geoPoint = (AbstractLocation) o;
 
 		if (!latitude.equals(geoPoint.latitude)) return false;
 		return longitude.equals(geoPoint.longitude);
