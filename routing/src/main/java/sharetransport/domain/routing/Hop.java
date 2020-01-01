@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.neo4j.driver.v1.types.Node;
@@ -46,9 +47,6 @@ public class Hop extends AbstractIdentifiable<Long> {
   @Relationship(type = HopDistance.TYPE, direction = Relationship.OUTGOING)
   private Set<HopDistance> distancesTo;
 
-  @Relationship(type = HopDistance.TYPE, direction = Relationship.INCOMING)
-  private Set<HopDistance> distancesIncoming;
-
   @Relationship(type = RELATION_BOOKEDTO_TYPE, direction = Relationship.OUTGOING)
   private Hop bookedTo;
 
@@ -57,6 +55,15 @@ public class Hop extends AbstractIdentifiable<Long> {
    */
   protected Hop() {
     super(null, null);
+  }
+
+  /**
+   * Ctor for domain logic.
+   * @param uid
+   * @param location
+   */
+  public Hop(String uid, Location location) {
+    this(null, uid, false, false, location);
   }
 
   /**
@@ -76,7 +83,6 @@ public class Hop extends AbstractIdentifiable<Long> {
     this.destination = notNull(destination, "destination cannot be null");
     this.location = notNull(location, "location cannot be null");
     this.distancesTo = new HashSet<>();
-    this.distancesIncoming = new HashSet<>();
   }
 
   public Boolean isOrigin() {
@@ -91,12 +97,8 @@ public class Hop extends AbstractIdentifiable<Long> {
     return Collections.unmodifiableSet(this.distancesTo);
   }
 
-  public Set<HopDistance> getDistancesIncoming() {
-    return Collections.unmodifiableSet(this.distancesIncoming);
-  }
-
-  public Hop getBookedTo() {
-    return this.bookedTo;
+  public Optional<Hop> getBookedTo() {
+    return Optional.ofNullable(this.bookedTo);
   }
 
   /**
@@ -104,7 +106,7 @@ public class Hop extends AbstractIdentifiable<Long> {
    * @param to from this to to hop
    * @param duration duration
    */
-  public void addDistanceTo(Hop to, Duration duration) {
+  public void durationTo(Hop to, Duration duration) {
     this.distancesTo.add(new HopDistance(this, to, Long.valueOf(duration.getSeconds()).intValue()));
   }
 
@@ -121,4 +123,6 @@ public class Hop extends AbstractIdentifiable<Long> {
     this.origin = true;
     destination.destination = true;
   }
+
+
 }

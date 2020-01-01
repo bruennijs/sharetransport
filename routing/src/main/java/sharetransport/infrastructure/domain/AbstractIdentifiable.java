@@ -61,4 +61,10 @@ public abstract class AbstractIdentifiable<I> implements Identifiable<I> {
         .append(uid)
         .toHashCode();
   }
+
+  @Override public String toString() {
+    return "AbstractIdentifiable{" +
+        "uid='" + uid + '\'' +
+        '}';
+  }
 }

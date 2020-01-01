@@ -24,6 +24,17 @@ public class CommunityRepository extends Neo4jAbstractRepository<Community> {
     super(session);
   }
 
+  /**
+   * Find by uid
+   * @param uid
+   * @return
+   */
+  public Optional<Community> findByUid(String uid) {
+    final Value params = parameters("uid", uid);
+
+    return Optional.ofNullable(getSession().queryForObject(getEntityType(), "MATCH (c:Community) WHERE c.uid = {uid} RETURN c as community", params.asMap()));
+  }
+
   public Class<Community> getEntityType() {
     return Community.class;
   }
