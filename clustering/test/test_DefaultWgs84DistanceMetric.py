@@ -18,7 +18,7 @@ class DefaultWgs84DistanceMetricTest(unittest.TestCase):
         distance_matrix: np.array = DefaultWgs84DistanceMetric().pairwise(gpSeries)
 
         print("{}".format(distance_matrix))
-        # self.assertEqual(True, False)
+        self.assertEqual(distance_matrix.shape, (gpSeries.shape[0], gpSeries.size))
 
 if __name__ == '__main__':
     unittest.main()
