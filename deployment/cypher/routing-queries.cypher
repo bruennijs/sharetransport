@@ -42,6 +42,10 @@ RETURN h as origin,
 MATCH (hopOn:Hop)<-[HOPS_ON]-(p:Passenger)-[HOPS_OFF]->(hopOff:Hop)
 RETURN hopOff as off, hopOn as on, p as passenger
 
+MATCH (h1: Hop), (h2: Hop)
+WHERE (h1)<-[:PART_OF]-(c:COMMUNITY {uid: 'c1'}) AND h1 <> h2
+RETURN h1, h2;
+
 /*MATCH p=shortestPath
 RETURN h as from, h2 as to, p as route, hFrom as hBookedTo*/
 

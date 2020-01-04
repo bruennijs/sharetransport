@@ -1,8 +1,13 @@
-from scipy.spatial.distance import cdist
+from typing import List
+
+from scipy.spatial.distance import pdist
 import numpy as np
 import geopandas as gp
-from shapely.geometry import Point
-from geopy.distance import geodesic
+from shapely.geometry import Point as sl_Point
+from geopy.distance import geodesic, Point as gp_Point
+
+from infrastructure.util import Utils
+
 
 class DefaultWgs84DistanceMetric(object):
     def __init__(self):
@@ -22,15 +27,13 @@ class DefaultWgs84DistanceMetric(object):
         x : GeoSeries
             A series of shapely.Point instances
         """
-        x_points: list = list(filter(lambda geometry: isinstance(geometry, Point), x))
-
-        # convert list of shapely Point to list of tuples with long/lat
-        points_ = [self.point_to_list(point) for point in x_points]
-        x_longlat_array: np.array = np.array(points_)
+        lat_long_2d_array: np.array = Utils.to_2d_array(x)
 
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
-        return cdist(x_longlat_array, x_longlat_array, metric=lambda u, v: geodesic(u, v).meters)
+        return pdist(lat_long_2d_array, metric=lambda u, v:
+            geodesic(DefaultWgs84DistanceMetric.to_geopy_point(u),
+                               DefaultWgs84DistanceMetric.to_geopy_point(v)).meters)
 
-
-    def point_to_list(self, point: Point) -> list:
-        return [point.y, point.x] # long/lat
+    @classmethod
+    def to_geopy_point(cls, point: List[float]) -> gp_Point:
+            return gp_Point(point[0], point[1]) #  [0]=lat / [1]=long
