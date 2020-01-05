@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import geopandas.geoseries as gs
 import os.path
-from domain.distance.metric import DefaultWgs84DistanceMetric
+from domain.distance.metric import DefaultWgs84DistanceMetric, DistanceMatrixType
 from scipy.cluster.hierarchy import complete as scipy_agglo_complete
 from sklearn.cluster import AgglomerativeClustering
 
@@ -34,30 +34,6 @@ class DefaultWgs84DistanceMetricTest(unittest.TestCase):
         countOfPoints = DefaultWgs84DistanceMetricTest.GS_POINTS.size
         countOfDistances: int = ((countOfPoints * countOfPoints - countOfPoints) / 2)
         self.assertEqual(distance_matrix.shape[0], countOfDistances)
-
-    def test_agglomerativ_clustering_scipy(self):
-        distance_matrix: np.array = DefaultWgs84DistanceMetric().pairwise(DefaultWgs84DistanceMetricTest.GS_POINTS)
-
-        # cluster these points
-        clusters: np.array = scipy_agglo_complete(distance_matrix)
-        print(clusters)
-
-        # THEN
-        self.assertEqual(clusters.size, DefaultWgs84DistanceMetricTest.GS_POINTS.size)
-
-    def test_agglomerativ_clustering_sklearn(self):
-        distance_matrix: np.array = DefaultWgs84DistanceMetric().pairwise(DefaultWgs84DistanceMetricTest.GS_POINTS)
-
-        # cluster these points
-        algo: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,
-                                                                linkage='complete',
-                                                                affinity=distance_matrix,
-                                                                distance_threshold=200.0)
-        lat_long_2d_array = Utils.to_2d_array(DefaultWgs84DistanceMetricTest.GS_POINTS)
-        clusters = algo.fit_predict(lat_long_2d_array)
-        # THEN
-        print(clusters)
-        self.assertEqual(clusters.size, DefaultWgs84DistanceMetricTest.GS_POINTS.size)
 
 
 if __name__ == '__main__':
