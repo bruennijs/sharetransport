@@ -6,11 +6,11 @@ import numpy as np
 
 
 T = TypeVar('T')
-S = TypeVar('S')
+S = TypeVar('S', covariant=True)
 
 class Utils(object):
     @staticmethod
-    def to_2d_array(series: List[Point], itemCreator: Callable = None) -> np.array:
+    def to_2d_array(points: Iterable[Point], itemCreator: Callable = None) -> np.array:
         """
 
         Parameters
@@ -20,7 +20,7 @@ class Utils(object):
         :returns
         numpy array with m samples (same count as points in arg) with column 0 = latitide, column 1 = longitude
         """
-        x_points: List[Point] = list(filter(lambda geometry: isinstance(geometry, Point), series))
+        x_points: List[Point] = list(filter(lambda geometry: isinstance(geometry, Point), points))
 
         # convert list of shapely Point to list of tuples with long/lat
         # x_points_2d: List[List[float]] = list(map(lambda point: DefaultWgs84DistanceMetric., x_points))

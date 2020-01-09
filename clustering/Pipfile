@@ -11,6 +11,7 @@ neo4j = "~=1.7.6"
 geopy = "*"
 shapely = "*"
 geopandas = "~=0.6.2"
+mockito = "*"
 
 [requires]
 python_version = "3.7"

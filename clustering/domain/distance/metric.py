@@ -1,10 +1,11 @@
 from enum import Enum
-from typing import List
+from typing import List, Sequence, Iterable
 
+from pandas import Series
 from scipy.spatial.distance import pdist, squareform
 import numpy as np
 import geopandas as gp
-from shapely.geometry import Point as sl_Point
+from shapely.geometry import Point as sl_Point, Point
 from geopy.distance import geodesic, Point as gp_Point
 
 from infrastructure.util import Utils
@@ -18,7 +19,7 @@ class DefaultWgs84DistanceMetric(object):
     def __init__(self):
         return
 
-    def pairwise(self, x: gp.GeoSeries, type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
+    def pairwise(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
         """
         Compute distance between each pair of the geoseries object. it filters only shapely.Point instances for calculation.
         The result is a sparse distance  matrix. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
