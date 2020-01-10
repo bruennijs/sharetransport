@@ -25,15 +25,15 @@ class CluseteringTest(unittest.TestCase):
 
         cls.GS_POINTS = cls.load_geojson('files/oldenburg_11_hops.geojson')
 
-    # def test_agglomerativ_clustering_scipy(self):
-    #     distance_matrix: np.array = DefaultWgs84DistanceMetric().pairwise(CluseteringTest.GS_POINTS, type=DistanceMatrixType.CONDENSED)
-    #
-    #     # cluster these points
-    #     clusters: np.array = scipy_agglo_complete(distance_matrix)
-    #     print(clusters)
-    #
-    #     # THEN
-    #     self.assertEqual(clusters.size, CluseteringTest.GS_POINTS.size)  ## this is still wrong cause returns the clusters of all processing generations
+        # def test_agglomerativ_clustering_scipy(self):
+        #     distance_matrix: np.array = DefaultWgs84DistanceMetric().pairwise(CluseteringTest.GS_POINTS, type=DistanceMatrixType.CONDENSED)
+        #
+        #     # cluster these points
+        #     clusters: np.array = scipy_agglo_complete(distance_matrix)
+        #     print(clusters)
+        #
+        #     # THEN
+        #     self.assertEqual(clusters.size, CluseteringTest.GS_POINTS.size)  ## this is still wrong cause returns the clusters of all processing generations
 
     def test_agglomerativ_clustering_sklearn(self):
         distance_matrix_2d: np.array = DefaultWgs84DistanceMetric().pairwise(CluseteringTest.GS_POINTS, type=DistanceMatrixType.TWO_DIMENSIONAL)
