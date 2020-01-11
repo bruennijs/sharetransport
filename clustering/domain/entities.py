@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from shapely.geometry import Point
+import numpy as np
 
 UID = str
 
@@ -8,6 +9,18 @@ UID = str
 class AbstractEntity(object):
     def __init__(self, uid: UID):
         self._uid = uid
+
+    def __str__(self) -> str:
+        return self._uid
+
+    def __hash__(self) -> int:
+        return hash(self.__str__())
+
+    def __eq__(self, o: object) -> bool:
+        return self._uid.__eq__(o.uid)
+
+    def __lt__(self, other):
+        return self._uid.__lt__(other.uid)
 
     @property
     def uid(self) -> UID:
@@ -25,6 +38,7 @@ class Hop(AbstractEntity):
 
 class Trip(AbstractEntity):
     def __init__(self, pickup: Hop, dropoff: Hop):
+        super().__init__(str(np.random.randint(100000)))
         self._dropoff = dropoff
         self._pickup = pickup
 
