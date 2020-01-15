@@ -1,10 +1,10 @@
 import os
-from abc import ABC
 
 from geopandas import GeoSeries
 from numpy import random
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from shapely.geometry import Point, Polygon
+from shapely.ops import triangulate
 
 from domain.entities import Trip, Hop
 
@@ -22,13 +22,15 @@ class TestDataBase(object):
     def __init__(self) -> None:
         self.clusters: DataFrame = DataFrame(data={
             'filename': ['files/cluster_bahnhof.geojson', 'files/cluster_buergeresch.geojson', 'files/cluster_innenstadt.geojson',
-                         'files/cluster_ziegelhof.geojson', 'files/cluster_haarenesch_flat_polygon.geojson']}, index=range(1, 6))
+                         'files/cluster_ziegelhof.geojson', 'files/cluster_haarenesch_flat_polygon.geojson', 'files/cluster_wahnbek.geojson']}, index=range(1, 7))
         self.clusters['polygon'] = self.clusters['filename'].apply(lambda fileName: find_polygon(load_geojson(fileName)).convex_hull)
 
     def create_new_point_in_cluster(self, clusterNo: int) -> Point:
+        n_samples = 10
         polygon: Polygon = self.clusters['polygon'].iloc[clusterNo]
-        return polygon.representative_point()
-
+        points: Series = ClusterPointBuilder().with_polygon(polygon).count(n_samples).build()
+        rand_index: int = random.randint(n_samples)
+        return points[rand_index]
 
 class TripBuilder(TestDataBase):
 
@@ -62,3 +64,22 @@ class ClusterBuilder(TestDataBase):
 
     def build(self) -> Polygon:
         return self.clusters['polygon'].iloc[self._cluster_no]
+
+
+class ClusterPointBuilder(object):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def with_polygon(self, polygon: Polygon):
+        self._polygon = polygon
+        return self
+
+    def count(self, count: int):
+        self._count = count
+        return self
+
+    def build(self) -> Series:
+        polygons: Series = Series(triangulate(self._polygon))
+        polygons_series_times_count: Series = Series([polygons[i % polygons.size] for i in range(0, self._count)])
+        return polygons_series_times_count.apply(lambda p: p.representative_point())

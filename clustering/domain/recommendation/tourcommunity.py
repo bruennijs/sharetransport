@@ -2,16 +2,17 @@ from abc import ABC, abstractmethod
 from functools import reduce
 from typing import List, Set, Dict, Iterable
 
+import numpy as np
+from geopandas import GeoDataFrame
 from geopy import Point
-from pandas import DataFrame, Series, merge
-from pandas.core.groupby import SeriesGroupBy, DataFrameGroupBy
+from pandas import DataFrame, Series
+from pandas.core.groupby import SeriesGroupBy
 from sklearn.cluster import AgglomerativeClustering
 
-from domain.distance.metric import DefaultWgs84DistanceMetric, DistanceMatrixType
-from domain.entities import Trip, Community, Hop
+from domain.clustering import HopClusterService
+from domain.entities import Trip, Hop
+from infrastructure.distance.metric import HarvesineWgs84DistanceMetric, DistanceMatrixType
 from infrastructure.util import Utils
-
-import numpy as np
 
 TourCommunityId = str
 
@@ -38,13 +39,16 @@ class ClusteringTourCommunityRecommendation(TourCommunityRecommendation):
     are in the same cluster so they are recommended for a shared transport.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, clustering = None) -> None:
+        """
+
+        :param clustering: clustering service to use for calculating cluster numbers; if none default one will be taken
+        """
         super().__init__()
-        self.distance: DefaultWgs84DistanceMetric = DefaultWgs84DistanceMetric()
-        self.clustering: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,
-                                                  linkage='complete',
-                                                  affinity='precomputed',
-                                                  distance_threshold=500.0)
+        if clustering is not None:
+            self.clustering_service = clustering
+        else:
+            self.clustering_service = HopClusterService()
 
 
     def recommend(self, trips: Iterable[Trip]) -> Dict[TourCommunityId, Set[Trip]]:
@@ -60,16 +64,13 @@ class ClusteringTourCommunityRecommendation(TourCommunityRecommendation):
         observations_list: List[List[Point, Hop, Trip]] = Utils.flatmap(trips, lambda trip: [[trip.pickup.location, trip.pickup, trip], [trip.dropoff.location, trip.dropoff, trip]])
 
         df: DataFrame = DataFrame(data=observations_list, columns=['point', 'hop', 'trip'])
-        # df['tripuid'] = df['trip'].apply(lambda trip: trip.uid)
 
-        distance_matrix_2d: np.array = self.distance.pairwise(df['point'], type=DistanceMatrixType.TWO_DIMENSIONAL)
-
-        # cluster these points
-        # lat_long_2d_array: np.array = Utils.to_2d_array(DefaultWgs84DistanceMetricTest.GS_POINTS)
-        clusters: np.array = self.clustering.fit_predict(distance_matrix_2d)
+        cluster_no: Series = self.clustering_service.cluster(points=df['point'])
 
         # add column with cluster numbers associated to each point
-        df = df.assign(cluster_no=clusters)
+        df['cluster_no'] = cluster_no
+
+        GeoDataFrame(geometry=df['point']).to_file("./points.geojson", driver="GeoJSON")
 
         group:SeriesGroupBy = df.groupby(['trip']).cluster_no
         tourGroups: Series = group.aggregate(self.reduce_to_tourgroup_no) # index is the trip object

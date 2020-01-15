@@ -1,17 +1,13 @@
-import unittest
-from typing import List
-
-import numpy as np
-import geopandas.geoseries as gs
 import os.path
+import unittest
 
+import geopandas.geoseries as gs
+import numpy as np
 from pandas import Series
 from shapely.geometry import Polygon, Point
-
-from domain.distance.metric import DefaultWgs84DistanceMetric, DistanceMatrixType
-from scipy.cluster.hierarchy import complete as scipy_agglo_complete
 from sklearn.cluster import AgglomerativeClustering
 
+from infrastructure.distance.metric import HarvesineWgs84DistanceMetric, DistanceMatrixType
 from infrastructure.util import Utils
 
 
@@ -36,7 +32,7 @@ class CluseteringTest(unittest.TestCase):
         #     self.assertEqual(clusters.size, CluseteringTest.GS_POINTS.size)  ## this is still wrong cause returns the clusters of all processing generations
 
     def test_agglomerativ_clustering_sklearn(self):
-        distance_matrix_2d: np.array = DefaultWgs84DistanceMetric().pairwise(CluseteringTest.GS_POINTS, type=DistanceMatrixType.TWO_DIMENSIONAL)
+        distance_matrix_2d: np.array = HarvesineWgs84DistanceMetric().pairwise(CluseteringTest.GS_POINTS, type=DistanceMatrixType.TWO_DIMENSIONAL)
 
         # cluster these points
         algo: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,
@@ -78,7 +74,7 @@ class CluseteringTest(unittest.TestCase):
         buffer: Polygon = geometries[0]
 
         in_buffer_point: Point = buffer.representative_point()
-        distance: float = DefaultWgs84DistanceMetric().pairwise([center, in_buffer_point])[0]
+        distance: float = HarvesineWgs84DistanceMetric().pairwise([center, in_buffer_point])[0]
 
         # THEN
         # representative point's distance must be lt polygon distance
@@ -89,7 +85,7 @@ class CluseteringTest(unittest.TestCase):
 
         in_cluster_points: gs.Series = gs.Series([polygon.convex_hull.representative_point() for _ in range(2)])
 
-        distance_matrix_2d = DefaultWgs84DistanceMetric().pairwise(in_cluster_points, type=DistanceMatrixType.TWO_DIMENSIONAL)
+        distance_matrix_2d = HarvesineWgs84DistanceMetric().pairwise(in_cluster_points, type=DistanceMatrixType.TWO_DIMENSIONAL)
 
         # cluster these points
         algo: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,
