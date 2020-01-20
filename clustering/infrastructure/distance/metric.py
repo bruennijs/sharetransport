@@ -17,7 +17,7 @@ class DistanceMatrixType(Enum):
 
 class DistanceMetric(ABC):
     @abstractmethod
-    def pairwise(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
+    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
         """
         Compute distance between each pair of the geoseries object. it filters only shapely.Point instances for calculation.
         The result is a sparse distance  matrix. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
@@ -34,7 +34,7 @@ class DistanceMetric(ABC):
         pass
 
     @abstractmethod
-    def pair(self, a, b):
+    def pair(self, a: Sequence[float], b: Sequence[float]) -> float:
         """
         One distance from a -> b
         :param points: tuple of points
@@ -47,7 +47,7 @@ class HarvesineWgs84DistanceMetric(DistanceMetric):
     def __init__(self):
         return
 
-    def pairwise(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
+    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
         """
         Compute distance between each pair of the geoseries object. it filters only shapely.Point instances for calculation.
         The result is a sparse distance  matrix. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist

@@ -22,7 +22,7 @@ class HarvesineWgs84DistanceMetricTest(unittest.TestCase):
         for item in HarvesineWgs84DistanceMetricTest.GS_POINTS:
                 print("item {}".format(item))
 
-        distance_matrix: np.array = HarvesineWgs84DistanceMetric().pairwise(HarvesineWgs84DistanceMetricTest.GS_POINTS)
+        distance_matrix: np.array = HarvesineWgs84DistanceMetric().cartesian_product(HarvesineWgs84DistanceMetricTest.GS_POINTS)
 
         print("{}".format(distance_matrix))
 

@@ -70,7 +70,7 @@ class ClusteringTourCommunityRecommendation(TourCommunityRecommendation):
         # add column with cluster numbers associated to each point
         df['cluster_no'] = cluster_no
 
-        GeoDataFrame(geometry=df['point']).to_file("./points.geojson", driver="GeoJSON")
+        # GeoDataFrame(geometry=df['point']).to_file("./points.geojson", driver="GeoJSON")
 
         group:SeriesGroupBy = df.groupby(['trip']).cluster_no
         tourGroups: Series = group.aggregate(self.reduce_to_tourgroup_no) # index is the trip object
