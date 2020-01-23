@@ -11,13 +11,13 @@ from infrastructure.util import Utils
 
 
 class DistanceMatrixType(Enum):
-    CONDENSED = 1,
-    TWO_DIMENSIONAL = 2
+    VECTOR = 1,
+    MATRIX = 2
 
 
 class DistanceMetric(ABC):
     @abstractmethod
-    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
+    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.VECTOR) -> np.array:
         """
         Compute distance between each pair of the geoseries object. it filters only shapely.Point instances for calculation.
         The result is a sparse distance  matrix. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
@@ -47,7 +47,7 @@ class HarvesineWgs84DistanceMetric(DistanceMetric):
     def __init__(self):
         return
 
-    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.CONDENSED) -> np.array:
+    def cartesian_product(self, x: Iterable[Point], type: DistanceMatrixType = DistanceMatrixType.VECTOR) -> np.array:
         """
         Compute distance between each pair of the geoseries object. it filters only shapely.Point instances for calculation.
         The result is a sparse distance  matrix. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
@@ -64,7 +64,7 @@ class HarvesineWgs84DistanceMetric(DistanceMetric):
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html#scipy.spatial.distance.pdist
         condensed_distance_matrix: np.array = pdist(lat_long_2d_array, metric=self.pair)
 
-        if type == DistanceMatrixType.TWO_DIMENSIONAL:
+        if type == DistanceMatrixType.MATRIX:
             return squareform(condensed_distance_matrix, 'tomatrix', True)
         else:
             return condensed_distance_matrix

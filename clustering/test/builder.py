@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from geopandas import GeoSeries
 from numpy import random
@@ -80,6 +81,6 @@ class ClusterPointBuilder(object):
         return self
 
     def build(self) -> Series:
-        polygons: Series = Series(triangulate(self._polygon))
-        polygons_series_times_count: Series = Series([polygons[i % polygons.size] for i in range(0, self._count)])
+        polygons: List = triangulate(self._polygon)
+        polygons_series_times_count: Series = Series([polygons[i % len(polygons)] for i in range(0, self._count)])
         return polygons_series_times_count.apply(lambda p: p.representative_point())

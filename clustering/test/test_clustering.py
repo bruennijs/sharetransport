@@ -32,7 +32,7 @@ class CluseteringTest(unittest.TestCase):
         #     self.assertEqual(clusters.size, CluseteringTest.GS_POINTS.size)  ## this is still wrong cause returns the clusters of all processing generations
 
     def test_agglomerativ_clustering_sklearn(self):
-        distance_matrix_2d: np.array = HarvesineWgs84DistanceMetric().cartesian_product(CluseteringTest.GS_POINTS, type=DistanceMatrixType.TWO_DIMENSIONAL)
+        distance_matrix_2d: np.array = HarvesineWgs84DistanceMetric().cartesian_product(CluseteringTest.GS_POINTS, type=DistanceMatrixType.MATRIX)
 
         # cluster these points
         algo: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,
@@ -85,7 +85,7 @@ class CluseteringTest(unittest.TestCase):
 
         in_cluster_points: gs.Series = gs.Series([polygon.convex_hull.representative_point() for _ in range(2)])
 
-        distance_matrix_2d = HarvesineWgs84DistanceMetric().cartesian_product(in_cluster_points, type=DistanceMatrixType.TWO_DIMENSIONAL)
+        distance_matrix_2d = HarvesineWgs84DistanceMetric().cartesian_product(in_cluster_points, type=DistanceMatrixType.MATRIX)
 
         # cluster these points
         algo: AgglomerativeClustering = AgglomerativeClustering(n_clusters=None,

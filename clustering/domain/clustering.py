@@ -32,7 +32,7 @@ class HopClusterService(object):
         :param points: points to calculate cluster for
         :return: Series cluster no as data. Index maps to correspoding index in points iterable
         """
-        distance_matrix_2d: np.array = self.distance.cartesian_product(points, type=DistanceMatrixType.TWO_DIMENSIONAL)
+        distance_matrix_2d: np.array = self.distance.cartesian_product(points, type=DistanceMatrixType.MATRIX)
 
         # cluster these points
         # lat_long_2d_array: np.array = Utils.to_2d_array(DefaultWgs84DistanceMetricTest.GS_POINTS)
