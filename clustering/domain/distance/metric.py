@@ -52,6 +52,18 @@ class NearestNeighborsDistanceRegression(DistanceMetric):
 
         self._regressor.fit(X_latlong.to_numpy(dtype=float), y.to_numpy(dtype=float))
 
+    def score(self, X: DataFrame, y_true: Series):
+        """
+            Calculates score depending on regressor.
+        :param X: columns must contain shapely.Point for pickup & dropoff points in WGS84 lat-long coordinate system
+        :param y_true: Target is the true distance for each pickup & dropoff point tuple
+        :return: void
+        """
+
+        X_latlong: DataFrame = X.apply(axis=1, func=self.convert_points_to_2d_flattened, result_type='expand')
+
+        return self._regressor.score(X_latlong.to_numpy(dtype=float), y_true.to_numpy(dtype=float))
+
     def trip_distance(self, coords_a: np.array, coords_b: np.array) -> float:
         return self._harvesine.pair(coords_a[0:2], coords_b[0:2]) + self._harvesine.pair(coords_a[2:], coords_b[2:])
 
